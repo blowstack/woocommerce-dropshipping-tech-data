@@ -90,10 +90,34 @@ class TechDataSoftware {
     $this->saveContentsToDB();
    }
 
-   public function generateWpProducts() {
+   public function generatePosts() {
      $WpProductRepository = new WpProductRepository();
-     $WpProductRepository->generateWpProducts();
-
+     $WpProductRepository->generateWpPosts();
    }
+
+   public function generateWpPostMetasBasic(array $post_metas) {
+     $WpProductRepository = new WpProductRepository();
+     $WpProductRepository->generateWpPostMetasBasic($post_metas);
+   }
+
+   public function generatePostMetaSku() {
+     $WpProductRepository = new WpProductRepository();
+     $WpProductRepository->generateWpPostMetaSku();
+   }
+
+  public function generatePostMetaPrice() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaPrice();
+  }
+
+  public function generatePostMetaRegularPrice() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaRegularPrice();
+  }
+
+  public function generatePostMetaStock() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaStock();
+  }
 
 }

@@ -18,10 +18,11 @@ class WpProductRepository {
                                 values('$distributor_id', '$manufacturer_id', '$brand', '$description', '$price', '$stock', '$category_1', '$category_2', '$ean', '$status', '$dropshipping')");
   }
 
-  public function generateWpProducts() {
+
+  //  generate WP Post object
+  public function generateWpPosts() {
 
     $wpdb = $this->wpdb;
-
     $wpdb->query('start transaction');
     $wpdb->query('set @currentDate := curdate()');
     $wpdb->query("insert into wp_posts
@@ -40,6 +41,84 @@ class WpProductRepository {
                         from wp_dropshipping_techdata_soft_temp
                         where dropshipping = 'software'");
     $wpdb->query('commit');
+  }
 
+  //  generate WP PostMeta object
+  public function generateWpPostMetasBasic(array $post_metas) {
+    $wpdb = $this->wpdb;
+
+    foreach ($post_metas as $meta => $value) {
+
+      $wpdb->query('start transaction');
+      $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '$meta', '$value'
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration");
+      $wpdb->query('commit');
+    }
+  }
+
+  public function generateWpPostMetaSku() {
+
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_sku', pt.manufacturer_id
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration");
+    $wpdb->query('commit');
+  }
+
+  public function generateWpPostMetaPrice() {
+
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_price', pt.price
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration");
+    $wpdb->query('commit');
+  }
+
+  public function generateWpPostMetaRegularPrice() {
+
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_regular_price', pt.price
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration");
+    $wpdb->query('commit');
+  }
+
+  public function generateWpPostMetaStock() {
+
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_stock', pt.stock
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration");
+    $wpdb->query('commit');
   }
 }
