@@ -2,8 +2,10 @@
 global $wpdb;
 
  if($_POST['save']) {
-   foreach ($_POST['save'] as $term => $profit) {
-     $wpdb->query("update wp_term_taxonomy set profit_margin = {$profit} where term_id = {$term}");
+   foreach ($_POST as $term => $profit) {
+     if ($term != 'save' && $profit != 'Accept changes') {
+       $wpdb->query("update wp_term_taxonomy set profit_margin = {$profit} where term_id = {$term}");
+     }
    }
  }
 
