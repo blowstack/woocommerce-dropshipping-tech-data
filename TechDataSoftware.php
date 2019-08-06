@@ -120,9 +120,19 @@ class TechDataSoftware {
     $WpProductRepository->generateWpPostMetaStock();
   }
 
-  public function generatePostProducerCode() {
+  public function generatePostMetaProducerCode() {
     $WpProductRepository = new WpProductRepository();
-//    $WpProductRepository->generateWpPostProducerCode();
+    $WpProductRepository->generateWpPostMetaProducerCode();
+  }
+
+  public function generatePostMetaBrand() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaBrand();
+  }
+
+  public function generatePostMetaDropShipping($type) {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaDropShipping($type);
   }
 
   public function getTechDataCategories(string $dropshipping): array {

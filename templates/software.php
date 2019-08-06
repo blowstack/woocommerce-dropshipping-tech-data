@@ -5,7 +5,6 @@
     $TechDataSoftware = new TechDataSoftware();
     $categories = $TechDataSoftware->getTechDataCategories('software');
     $TechDataSoftware->insertNewCategories($categories);
-//    $profit_margins = $TechDataSoftware->getProfitMargins('software');
     $TechDataSoftware->importFromTechData();
     $TechDataSoftware->generatePosts();
     $TechDataSoftware->generatePostMetaSku();
@@ -14,7 +13,9 @@
     $TechDataSoftware->generatePostMetaStock();
     $TechDataSoftware->generateWpPostMetaCost();
     $TechDataSoftware->generateWpPostMetaImage();
-    $TechDataSoftware->generatePostProducerCode();
+    $TechDataSoftware->generatePostMetaProducerCode();
+    $TechDataSoftware->generatePostMetaBrand();
+    $TechDataSoftware->generatePostMetaDropShipping('software');
     $TechDataSoftware->generatePostCategories();
 
     // price, sku, regular_price, stock generated separately

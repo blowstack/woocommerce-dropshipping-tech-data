@@ -152,6 +152,25 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
+  public function generateWpPostMetaProducerCode() {
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_manufacturer_id', pt.manufacturer_id 
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_manufacturer_id' and 
+                              `post_id` = post.id   )");
+    $wpdb->query('commit');
+  }
+
   public function generateWpPostMetaCost() {
     $wpdb = $this->wpdb;
     $wpdb->query('start transaction');
@@ -167,6 +186,44 @@ class WpProductRepository {
                               SELECT 1
                               FROM wp_postmeta
                               WHERE `meta_key` = '_cost' and 
+                              `post_id` = post.id   )");
+    $wpdb->query('commit');
+  }
+
+  public function generateWpPostMetaBrand() {
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_brand', pt.brand 
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_brand' and 
+                              `post_id` = post.id   )");
+    $wpdb->query('commit');
+  }
+
+  public function generateWpPostMetaDropShipping($type) {
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_dropshipping', 'software'
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_dropshipping' and 
                               `post_id` = post.id   )");
     $wpdb->query('commit');
   }
@@ -351,6 +408,19 @@ class WpProductRepository {
                               `post_id` = post.id   )
                         and image.post_type = 'attachment'");
     $wpdb->query('commit');
+  }
+
+  public function updateCategoryCount() {
+//    UPDATE wp_term_taxonomy SET count = (
+//    SELECT COUNT(*) FROM wp_term_relationships rel
+//    LEFT JOIN wp_posts po ON (po.ID = rel.object_id)
+//    WHERE
+//        rel.term_taxonomy_id = wp_term_taxonomy.term_taxonomy_id
+//        AND
+//        wp_term_taxonomy.taxonomy NOT IN ('link_category')
+//    AND
+//    po.post_status IN ('publish', 'future')
+//)
   }
 
 }
