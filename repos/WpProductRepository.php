@@ -152,6 +152,27 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
+  public function generateWpPostMetaCost() {
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_cost', pt.price 
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_cost' and 
+                              `post_id` = post.id   )");
+    $wpdb->query('commit');
+  }
+
+
+
   public function getTechDataCategories(string $dropshipping): array {
 
     $wpdb = $this->wpdb;
@@ -203,6 +224,7 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
+
   public function generateProductType() {
 
     $wpdb = $this->wpdb;
@@ -251,6 +273,83 @@ class WpProductRepository {
                         inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
                         inner join wp_terms term on term.name = pt.category_1
                         inner join wp_term_taxonomy taxonomy on taxonomy.term_id = term.term_id");
+    $wpdb->query('commit');
+  }
+
+  public function updatePriceByMargin() {
+
+    $wpdb = $this->wpdb;
+
+    $wpdb->query('alter table wp_postmeta add column meta_temp int');
+    $wpdb->query('start transaction');
+    $wpdb->query('set @postId = 0');
+    $wpdb->query("update wp_postmeta
+                        set `meta_temp` = (@postId := post_id),
+                            `meta_value` = meta_value + (meta_value *
+                                                                    (select profit_margin
+                                                                       from wp_term_taxonomy taxonomy
+                                                                                inner join wp_term_relationships relations
+                                                                                           on relations.term_taxonomy_id = taxonomy.term_taxonomy_id
+                                                                       where relations.object_id = @postId
+                                                                         and taxonomy.taxonomy = 'product_cat'
+                                                                    limit 1) / 100
+                                                          ) 
+                        where `meta_key` = '_regular_price' or `meta_key` = '_price' ");
+    $wpdb->query('commit');
+    $wpdb->query('alter table wp_postmeta drop column meta_temp');
+
+    $wpdb->query("update wp_postmeta
+                        set `meta_value` = round(meta_value, 2)
+                        where `meta_key` = '_regular_price' or `meta_key` = '_price'");
+  }
+
+  public function updatePriceByMarginAndCost() {
+    $wpdb = $this->wpdb;
+
+    $wpdb->query('alter table wp_postmeta add column meta_temp int');
+    $wpdb->query('start transaction');
+    $wpdb->query('set @postId = 0');
+    $wpdb->query("update wp_postmeta price
+                        inner join wp_postmeta cost on cost.post_id = price.post_id
+                        set price.`meta_temp` = (@postId := price.post_id),
+                            price.`meta_value` = cost.`meta_value` + (cost.`meta_value` *
+                                                                    (select profit_margin
+                                                                       from wp_term_taxonomy taxonomy
+                                                                                inner join wp_term_relationships relations
+                                                                                           on relations.term_taxonomy_id = taxonomy.term_taxonomy_id
+                                                                       where relations.object_id = @postId
+                                                                         and taxonomy.taxonomy = 'product_cat'
+                                                                    limit 1) / 100
+                                                          ) 
+                        where (price.`meta_key` = '_regular_price' or price.`meta_key` = '_price')
+                        and cost.meta_key = '_cost'");
+    $wpdb->query('commit');
+    $wpdb->query('alter table wp_postmeta drop column meta_temp');
+
+    $wpdb->query("update wp_postmeta
+                        set `meta_value` = round(meta_value, 2)
+                        where `meta_key` = '_regular_price' or `meta_key` = '_price'");
+  }
+
+  public function generateWpPostMetaImage() {
+
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_thumbnail_id', image.id
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_posts image on image.post_title = pt.brand
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_thumbnail_id' and 
+                              `post_id` = post.id   )
+                        and image.post_type = 'attachment'");
     $wpdb->query('commit');
   }
 

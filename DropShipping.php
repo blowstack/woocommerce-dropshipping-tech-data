@@ -58,7 +58,7 @@ class DropShipping {
                     )
                      $charset_collate";
 
-    $alter_table = "alter table wp_terms add profit_margin float default 1 null";
+    $alter_table = "alter table wp_term_taxonomy add profit_margin float default 1 null";
 
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
     dbDelta( $create_table );

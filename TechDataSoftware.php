@@ -120,6 +120,11 @@ class TechDataSoftware {
     $WpProductRepository->generateWpPostMetaStock();
   }
 
+  public function generatePostProducerCode() {
+    $WpProductRepository = new WpProductRepository();
+//    $WpProductRepository->generateWpPostProducerCode();
+  }
+
   public function getTechDataCategories(string $dropshipping): array {
     $WpProductRepository = new WpProductRepository();
     $categories = $WpProductRepository->getTechDataCategories($dropshipping);
@@ -142,5 +147,27 @@ class TechDataSoftware {
     $WpProductRepository->generateProductLang();
     $WpProductRepository->generateProductCategory();
   }
+
+  public function generateWpPostMetaCost() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaCost();
+  }
+
+  public function generateWpPostMetaImage() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaImage();
+  }
+
+  public function updatePriceByMargin() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->updatePriceByMargin();
+  }
+
+  public function updatePriceByMarginAndCost() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->updatePriceByMarginAndCost();
+  }
+
+
 
 }

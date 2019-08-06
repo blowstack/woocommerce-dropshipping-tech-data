@@ -12,6 +12,9 @@
     $TechDataSoftware->generatePostMetaPrice();
     $TechDataSoftware->generatePostMetaRegularPrice();
     $TechDataSoftware->generatePostMetaStock();
+    $TechDataSoftware->generateWpPostMetaCost();
+    $TechDataSoftware->generateWpPostMetaImage();
+    $TechDataSoftware->generatePostProducerCode();
     $TechDataSoftware->generatePostCategories();
 
     // price, sku, regular_price, stock generated separately
@@ -29,7 +32,7 @@
         '_tax_class' => '',
         '_manage_stock' => 'yes',
         '_backorders' => 'no',
-        '_low_stock_amount' => 2,
+        '_low_stock_amount' => 1,
         '_sold_individually' => 'no',
         '_weight' => '',
         '_length' => '',
@@ -44,13 +47,14 @@
         '_product_image_gallery' => '',
         '_download_limit' => '-1',
         '_download_expiry' => '-1',
-        '_thumbnail_id'  => '-1',
+//        '_thumbnail_id'  => '-1',
         '_stock_status' => 'instock',
         '_product_version' => '3.5.6',
         '_edit_lock' => '1564156041:1',
         '_edit_last' => 1,
       ]
     );
+    $TechDataSoftware->updatePriceByMargin();
   }
   ?>
 
