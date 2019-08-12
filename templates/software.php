@@ -2,10 +2,11 @@
 
   if ($_POST['sync']) {
 
+    $TechDataFTPSoftware = new TechDataFTPSoftware('../wp-content/plugins/DropShipping/upload/csv/techdata_soft.csv', '0000565134.csv', '62.225.34.76', 'ESD565134', '9sWQvaP0');
     $TechDataSoftware = new TechDataSoftware();
     $categories = $TechDataSoftware->getTechDataCategories('software');
     $TechDataSoftware->insertNewCategories($categories);
-    $TechDataSoftware->importFromTechData();
+    $TechDataFTPSoftware->importFromTechData();
     $TechDataSoftware->generatePosts();
     $TechDataSoftware->generatePostMetaSku();
     $TechDataSoftware->generatePostMetaPrice();

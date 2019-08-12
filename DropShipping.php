@@ -30,6 +30,7 @@ class DropShipping {
   function __construct() {
     $this->plugin_name = plugin_basename(__FILE__);
     require_once( dirname( __FILE__ ) . '/TechDataSoftware.php' );
+    require_once( dirname( __FILE__ ) . '/TechDataFTPSoftware.php' );
 
   }
 
