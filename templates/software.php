@@ -2,7 +2,10 @@
 
   if ($_POST['sync']) {
 
-    $TechDataFTPSoftware = new TechDataFTPSoftware('../wp-content/plugins/DropShipping/upload/csv/techdata_soft.csv', '0000565134.csv', '62.225.34.76', 'ESD565134', '9sWQvaP0');
+    $TechDataFTPSoftware = new TechDataFTPSoftware(
+      '../wp-content/plugins/DropShipping/upload/csv/techdata_soft.csv',
+      '0000565134.csv',
+      '62.225.34.76', 'ESD565134', '9sWQvaP0');
     $TechDataSoftware = new TechDataSoftware();
     $categories = $TechDataSoftware->getTechDataCategories('software');
     $TechDataSoftware->insertNewCategories($categories);
@@ -49,7 +52,6 @@
         '_product_image_gallery' => '',
         '_download_limit' => '-1',
         '_download_expiry' => '-1',
-//        '_thumbnail_id'  => '-1',
         '_stock_status' => 'instock',
         '_product_version' => '3.5.6',
         '_edit_lock' => '1564156041:1',

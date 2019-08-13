@@ -9,8 +9,6 @@ class TechDataSoftware {
 
   public function __construct( ) {
     require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
-    global $wp_filesystem;
-    $this->wp_filesystem = $wp_filesystem;
   }
 
    public function generatePosts() {
