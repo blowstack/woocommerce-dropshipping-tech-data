@@ -186,6 +186,18 @@ abstract class TechDataFTP {
     }
   }
 
+  protected function extractFiles() {
+    $zip = new ZipArchive;
+    $local_file_path = $this->getLocalFilePath();
+    if ($zip->open($local_file_path) === TRUE) {
+      $zip->extractTo('../wp-content/plugins/DropShipping/upload/csv/');
+      $zip->close();
+    } else {
+      echo 'failed';
+    }
+
+  }
+
   /**
    * @param $distributor
    * @param $manufacturer
@@ -200,7 +212,7 @@ abstract class TechDataFTP {
    * @param $dropshipping
    * @return array
    */
-  public function setCSVIndexes($distributor, $manufacturer, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping) {
+  public function setCSVIndexes($distributor, $manufacturer, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status) {
 
     $csv_indexes = [
       'distributor_id' => $distributor,
@@ -213,7 +225,6 @@ abstract class TechDataFTP {
       'category_2' => $category_2,
       'ean' => $ean,
       'status' => $status,
-      'dropshipping' => $dropshipping,
     ];
     $this->CSVIndexes = $csv_indexes;
   }
@@ -228,15 +239,14 @@ abstract class TechDataFTP {
   /**
    * @param $CSVIndexes
    */
-  protected function saveContentsToDB($CSVIndexes): void {
+  protected function saveContentsToDB($delimeter, $CSVIndexes, $csv_file_path): void {
 
-    $local_file_path = $this->getLocalFilePath();
     $header = true;
-    $file = fopen($local_file_path, "r");
+    $file = fopen($csv_file_path, "r");
     $table_name = $this->getTableName();
     $dropshipping = $this->getDropshipping();
 
-    while (($emapData = fgetcsv($file, 0, "\t")) !== FALSE) {
+    while (($emapData = fgetcsv($file, 0, $delimeter)) !== FALSE) {
 
       $emapData = array_map("utf8_encode", $emapData);
 
@@ -250,16 +260,44 @@ abstract class TechDataFTP {
         $distributor_id = $emapData[$CSVIndexes['distributor_id']];
         $manufacturer_id = $emapData[$CSVIndexes['manufacturer_id']];
         $brand = $emapData[$CSVIndexes['brand']];
-        $description = $emapData[$CSVIndexes['description']];
-        $price = $emapData[$CSVIndexes['price']];
+        $description = str_replace("'", '', $emapData[$CSVIndexes['description']]);
+        $price = $CSVIndexes['price'] != '' ? $emapData[$CSVIndexes['price']] : 0;
         $stock = $emapData[$CSVIndexes['stock']];
         $category_1 = $emapData[$CSVIndexes['category_1']];
         $category_2 = $emapData[$CSVIndexes['category_2']];
         $ean = $emapData[$CSVIndexes['ean']];
-        $status = $emapData[$CSVIndexes['status']];
+        $status = $CSVIndexes['status'] != '' ? $emapData[$CSVIndexes['status']] : 'live';
 
         $WpProductRepository = new WpProductRepository();
         $WpProductRepository->insertFromCSV($table_name, $distributor_id, $manufacturer_id, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping);
+      }
+    }
+  }
+
+  /**
+   * @param $csv_file_path
+   */
+  protected function saveContentPriceToDB($csv_file_path): void {
+
+    $header_csv = true;
+    $file_price = fopen($csv_file_path, "r");
+    $table_name = $this->getTableName();
+
+    while (($emapData = fgetcsv($file_price, 0, ";")) !== FALSE) {
+
+      $emapData = array_map("utf8_encode", $emapData);
+
+      if ($header_csv) {
+        $header_csv = false;
+        continue;
+      }
+      else {
+
+        $distributor_id = $emapData[0];
+        $price = str_replace(',', '.', $emapData[1]);
+
+        $WpProductRepository = new WpProductRepository();
+        $WpProductRepository->insertPriceFromCSV($table_name, $distributor_id, $price);
       }
     }
   }

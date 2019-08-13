@@ -6,24 +6,24 @@
       '../wp-content/plugins/DropShipping/upload/csv/techdata_soft.csv',
       '0000565134.csv',
       '62.225.34.76', 'ESD565134', '9sWQvaP0');
-    $TechDataSoftware = new TechDataSoftware();
-    $categories = $TechDataSoftware->getTechDataCategories('software');
-    $TechDataSoftware->insertNewCategories($categories);
+    $TechDataProductGenerator = new TechDataProductGenerator();
+    $categories = $TechDataProductGenerator->getTechDataCategories('software');
+    $TechDataProductGenerator->insertNewCategories($categories);
     $TechDataFTPSoftware->importFromTechData();
-    $TechDataSoftware->generatePosts();
-    $TechDataSoftware->generatePostMetaSku();
-    $TechDataSoftware->generatePostMetaPrice();
-    $TechDataSoftware->generatePostMetaRegularPrice();
-    $TechDataSoftware->generatePostMetaStock();
-    $TechDataSoftware->generateWpPostMetaCost();
-    $TechDataSoftware->generateWpPostMetaImage();
-    $TechDataSoftware->generatePostMetaProducerCode();
-    $TechDataSoftware->generatePostMetaBrand();
-    $TechDataSoftware->generatePostMetaDropShipping('software');
-    $TechDataSoftware->generatePostCategories();
+    $TechDataProductGenerator->generatePosts('software');
+    $TechDataProductGenerator->generatePostMetaSku();
+    $TechDataProductGenerator->generatePostMetaPrice();
+    $TechDataProductGenerator->generatePostMetaRegularPrice();
+    $TechDataProductGenerator->generatePostMetaStock();
+    $TechDataProductGenerator->generateWpPostMetaCost();
+    $TechDataProductGenerator->generateWpPostMetaImage();
+    $TechDataProductGenerator->generatePostMetaProducerCode();
+    $TechDataProductGenerator->generatePostMetaBrand();
+    $TechDataProductGenerator->generatePostMetaDropShipping('software');
+    $TechDataProductGenerator->generatePostCategories();
 
     // price, sku, regular_price, stock generated separately
-    $TechDataSoftware->generateWpPostMetasBasic(
+    $TechDataProductGenerator->generateWpPostMetasBasic(
       [
         '_vs_post_settings' => 'a:1:{s:10:"vc_grid_id";a:0:{}}',
         '_wc_review_count' => 0,
@@ -58,7 +58,7 @@
         '_edit_last' => 1,
       ]
     );
-    $TechDataSoftware->updatePriceByMargin();
+    $TechDataProductGenerator->updatePriceByMargin();
   }
   ?>
 

@@ -19,7 +19,7 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
     $this->setFtpUser($ftp_user);
     $this->setFtpPassword($ftp_password);
     $this->setFilename("ftp://$this->ftp_user:$this->ftp_password@$this->ftp_ip/$this->server_file_name");
-    $this->setCSVindexes(0,1,2,3,4,5,6, 7, 8, 9, 10);
+    $this->setCSVindexes(0,1,2,3,4,5,6, 7, 8, 9);
   }
 
 
@@ -28,6 +28,7 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
     $this->downloadContents();
     $this->writeContentsToFile();
     $CSVIndexes = $this->getCSVIndexes();
-    $this->saveContentsToDB($CSVIndexes);
+    $csv_file_path = $this->getLocalFilePath();
+    $this->saveContentsToDB("\t", $CSVIndexes, $csv_file_path);
    }
 }

@@ -13,14 +13,23 @@ class WpProductRepository {
 
   public function insertFromCSV($table_name, $distributor_id, $manufacturer_id, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping) {
     $wpdb = $this->wpdb;
-
     $wpdb->query("insert ignore into $table_name(distributor_id, manufacturer_id, brand, description, price, stock, category_1, category_2, ean, status, dropshipping)
                                 values('$distributor_id', '$manufacturer_id', '$brand', '$description', '$price', '$stock', '$category_1', '$category_2', '$ean', '$status', '$dropshipping')");
   }
 
+  public function insertPriceFromCSV($table_name, $distributor_id, $price) {
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("update $table_name
+                        set price = $price
+                        where distributor_id = '$distributor_id'");
+    $wpdb->query('commit');
+
+  }
+
 
   //  generate WP Post object
-  public function generateWpPosts() {
+  public function generateWpPosts($dropshipping) {
 
     $wpdb = $this->wpdb;
     $wpdb->query('start transaction');
@@ -39,7 +48,7 @@ class WpProductRepository {
                              'closed', slugify(left(replace(replace(description, '', ''), '', ''), 100)), ' ', ' ',
                             @currentDate, @currentDate, ' ', 'product', distributor_id
                         from wp_dropshipping_techdata_soft_temp
-                        where dropshipping = 'software'
+                        where dropshipping = '$dropshipping'
                         and NOT EXISTS(
                               SELECT 1
                               FROM wp_posts
@@ -81,7 +90,7 @@ class WpProductRepository {
                           post_id, meta_key, meta_value
                         )
                         select
-                          post.id, '_sku', pt.manufacturer_id
+                          post.id, '_sku', pt.distributor_id
                         from wp_posts post
                         inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
                         where NOT EXISTS(
@@ -209,7 +218,7 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
-  public function generateWpPostMetaDropShipping($type) {
+  public function generateWpPostMetaDropShipping($dropshipping) {
     $wpdb = $this->wpdb;
     $wpdb->query('start transaction');
     $wpdb->query("insert into wp_postmeta
@@ -217,7 +226,7 @@ class WpProductRepository {
                           post_id, meta_key, meta_value
                         )
                         select
-                          post.id, '_dropshipping', 'software'
+                          post.id, '_dropshipping', '$dropshipping' 
                         from wp_posts post
                         inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
                         where NOT EXISTS(
@@ -410,17 +419,5 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
-  public function updateCategoryCount() {
-//    UPDATE wp_term_taxonomy SET count = (
-//    SELECT COUNT(*) FROM wp_term_relationships rel
-//    LEFT JOIN wp_posts po ON (po.ID = rel.object_id)
-//    WHERE
-//        rel.term_taxonomy_id = wp_term_taxonomy.term_taxonomy_id
-//        AND
-//        wp_term_taxonomy.taxonomy NOT IN ('link_category')
-//    AND
-//    po.post_status IN ('publish', 'future')
-//)
-  }
 
 }
