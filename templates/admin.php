@@ -10,7 +10,7 @@ global $wpdb;
  }
 
 if($_POST['update']) {
-  $TechDataSoftware = new TechDataSoftware();
+  $TechDataSoftware = new TechDataProductGenerator();
   $TechDataSoftware->updatePriceByMarginAndCost();
 
 }

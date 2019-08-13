@@ -6,7 +6,7 @@
   global $wpdb;
   global $wp_filesystem;
 
-  if ($_POST['csv']) {
+  if ($_POST['sync']) {
 
     $TechDataFTPHardware = new TechDataFTPHardware(
       '../wp-content/plugins/DropShipping/upload/zip/techdata_hard.zip',
@@ -68,11 +68,6 @@
 
   }
 
-
-  if ($_POST['sync']) {
-
-  }
-
   ?>
 
 </div>
@@ -80,20 +75,13 @@
 <div class="container">
 
   <form method="post">
-    <input type="submit" name="csv" value="Pobierz dane z Techdaty">
+    <input type="submit" name="sync" value="Ręczna synchronizacja">
     <?php
-      if ($_POST['csv']) {
+      if ($_POST['sync']) {
        echo 'ok';
       }
     ?>
     <br>
-    <br>
-    <input type="submit" name="sync" value="Dodaj nowe produkty">
-    <?php
-    if ($_POST['sync']) {
-      echo 'ok';
-    }
-    ?>
   </form>
 
 </div>
