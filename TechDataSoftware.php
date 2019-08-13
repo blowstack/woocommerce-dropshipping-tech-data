@@ -5,8 +5,6 @@
  */
 class TechDataSoftware {
 
-  protected $wp_filesystem;
-
   public function __construct( ) {
     require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
   }

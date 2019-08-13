@@ -13,11 +13,16 @@ abstract class TechDataFTP {
   protected $ftp_password;
   protected $filename;
   protected $CSVcontents;
+  protected $CSVIndexes;
   protected $table_name;
   protected $wp_filesystem;
+  protected $dropshipping;
 
 
   public function __construct() {
+
+    require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
+
     global $wpdb;
     global $wp_filesystem;
 
@@ -145,6 +150,20 @@ abstract class TechDataFTP {
   }
 
   /**
+   * @return mixed
+   */
+  public function getDropshipping() {
+    return $this->dropshipping;
+  }
+
+  /**
+   * @param mixed $dropshipping
+   */
+  public function setDropshipping($dropshipping): void {
+    $this->dropshipping = $dropshipping;
+  }
+
+  /**
    * @param mixed $wp_filesystem
    */
   public function setWpFilesystem($wp_filesystem): void {
@@ -164,6 +183,84 @@ abstract class TechDataFTP {
 
     if (!$wp_filesystem->put_contents($local_file_path, $CSVcontents, 'FS_CHMOD_FILE')) {
       echo 'error saving file!';
+    }
+  }
+
+  /**
+   * @param $distributor
+   * @param $manufacturer
+   * @param $brand
+   * @param $description
+   * @param $price
+   * @param $stock
+   * @param $category_1
+   * @param $category_2
+   * @param $ean
+   * @param $status
+   * @param $dropshipping
+   * @return array
+   */
+  public function setCSVIndexes($distributor, $manufacturer, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping) {
+
+    $csv_indexes = [
+      'distributor_id' => $distributor,
+      'manufacturer_id' => $manufacturer,
+      'brand' => $brand,
+      'description' => $description,
+      'price' => $price,
+      'stock' => $stock,
+      'category_1' => $category_1,
+      'category_2' => $category_2,
+      'ean' => $ean,
+      'status' => $status,
+      'dropshipping' => $dropshipping,
+    ];
+    $this->CSVIndexes = $csv_indexes;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getCSVIndexes() {
+    return $this->CSVIndexes;
+  }
+
+  /**
+   * @param $CSVIndexes
+   */
+  protected function saveContentsToDB($CSVIndexes): void {
+
+    $local_file_path = $this->getLocalFilePath();
+    $header = true;
+    $file = fopen($local_file_path, "r");
+    $table_name = $this->getTableName();
+    $dropshipping = $this->getDropshipping();
+
+    while (($emapData = fgetcsv($file, 0, "\t")) !== FALSE) {
+
+      $emapData = array_map("utf8_encode", $emapData);
+
+      // data header not included
+      if ($header) {
+        $header = false;
+        continue;
+      }
+      else {
+
+        $distributor_id = $emapData[$CSVIndexes['distributor_id']];
+        $manufacturer_id = $emapData[$CSVIndexes['manufacturer_id']];
+        $brand = $emapData[$CSVIndexes['brand']];
+        $description = $emapData[$CSVIndexes['description']];
+        $price = $emapData[$CSVIndexes['price']];
+        $stock = $emapData[$CSVIndexes['stock']];
+        $category_1 = $emapData[$CSVIndexes['category_1']];
+        $category_2 = $emapData[$CSVIndexes['category_2']];
+        $ean = $emapData[$CSVIndexes['ean']];
+        $status = $emapData[$CSVIndexes['status']];
+
+        $WpProductRepository = new WpProductRepository();
+        $WpProductRepository->insertFromCSV($table_name, $distributor_id, $manufacturer_id, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping);
+      }
     }
   }
 
