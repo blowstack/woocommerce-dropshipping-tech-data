@@ -101,6 +101,26 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
+  public function generateWpPostMetaManufacturer() {
+
+    $wpdb = $this->wpdb;
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into wp_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_manufacturer_id', pt.manufacturer_id
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_manufacturer_id' and 
+                              `post_id` = post.id   )");
+    $wpdb->query('commit');
+  }
+
   public function generateWpPostMetaPrice() {
 
     $wpdb = $this->wpdb;
@@ -342,59 +362,55 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
-  public function updatePriceByMargin() {
-
-    $wpdb = $this->wpdb;
-
-    $wpdb->query('alter table wp_postmeta add column meta_temp int');
-    $wpdb->query('start transaction');
-    $wpdb->query('set @postId = 0');
-    $wpdb->query("update wp_postmeta
-                        set `meta_temp` = (@postId := post_id),
-                            `meta_value` = meta_value + (meta_value *
-                                                                    (select profit_margin
-                                                                       from wp_term_taxonomy taxonomy
-                                                                                inner join wp_term_relationships relations
-                                                                                           on relations.term_taxonomy_id = taxonomy.term_taxonomy_id
-                                                                       where relations.object_id = @postId
-                                                                         and taxonomy.taxonomy = 'product_cat'
-                                                                    limit 1) / 100
-                                                          ) 
-                        where `meta_key` = '_regular_price' or `meta_key` = '_price' ");
-    $wpdb->query('commit');
-    $wpdb->query('alter table wp_postmeta drop column meta_temp');
-
-    $wpdb->query("update wp_postmeta
-                        set `meta_value` = round(meta_value, 2)
-                        where `meta_key` = '_regular_price' or `meta_key` = '_price'");
-  }
+//  public function updatePriceByMarginAndCost() {
+//
+//    $wpdb = $this->wpdb;
+//
+//    $wpdb->query('alter table wp_postmeta add column meta_temp int');
+//    $wpdb->query('start transaction');
+//    $wpdb->query('set @postId = 0');
+//    $wpdb->query("update wp_postmeta
+//                        set `meta_temp` = (@postId := post_id),
+//                            `meta_value` = meta_value + (meta_value *
+//                                                                    (select profit_margin
+//                                                                       from wp_term_taxonomy taxonomy
+//                                                                                inner join wp_term_relationships relations
+//                                                                                           on relations.term_taxonomy_id = taxonomy.term_taxonomy_id
+//                                                                       where relations.object_id = @postId
+//                                                                         and taxonomy.taxonomy = 'product_cat'
+//                                                                    limit 1) / 100
+//                                                          )
+//                        where `meta_key` = '_regular_price' or `meta_key` = '_price' ");
+//    $wpdb->query('commit');
+//    $wpdb->query('alter table wp_postmeta drop column meta_temp');
+//
+//    $wpdb->query("update wp_postmeta
+//                        set `meta_value` = round(meta_value, 2)
+//                        where `meta_key` = '_regular_price' or `meta_key` = '_price'");
+//  }
 
   public function updatePriceByMarginAndCost() {
     $wpdb = $this->wpdb;
 
-    $wpdb->query('alter table wp_postmeta add column meta_temp int');
-    $wpdb->query('start transaction');
-    $wpdb->query('set @postId = 0');
-    $wpdb->query("update wp_postmeta price
-                        inner join wp_postmeta cost on cost.post_id = price.post_id
-                        set price.`meta_temp` = (@postId := price.post_id),
-                            price.`meta_value` = cost.`meta_value` + (cost.`meta_value` *
-                                                                    (select profit_margin
-                                                                       from wp_term_taxonomy taxonomy
-                                                                                inner join wp_term_relationships relations
-                                                                                           on relations.term_taxonomy_id = taxonomy.term_taxonomy_id
-                                                                       where relations.object_id = @postId
-                                                                         and taxonomy.taxonomy = 'product_cat'
-                                                                    limit 1) / 100
-                                                          ) 
-                        where (price.`meta_key` = '_regular_price' or price.`meta_key` = '_price')
-                        and cost.meta_key = '_cost'");
-    $wpdb->query('commit');
-    $wpdb->query('alter table wp_postmeta drop column meta_temp');
+    $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit where profit is not null");
 
-    $wpdb->query("update wp_postmeta
-                        set `meta_value` = round(meta_value, 2)
-                        where `meta_key` = '_regular_price' or `meta_key` = '_price'");
+    foreach ($profits as $profit) {
+      $profit_value = $profit->profit;
+      $range_from = $profit->range_from;
+      $range_to = $profit->range_to;
+
+      $wpdb->query('start transaction');
+      $wpdb->query("update wp_postmeta meta_price
+                          inner join wp_postmeta meta_cost on meta_cost.post_id = meta_price.post_id          
+                          set meta_price.meta_value = round(meta_cost.meta_value + meta_price.meta_value * $profit_value / 100, 2)
+                          where (meta_price.meta_key = '_price' || meta_price.meta_key = '_regular_price')
+                          and meta_cost.meta_key = '_cost'
+                          and meta_cost.meta_value >= $range_from
+                          and meta_cost.meta_value <= $range_to");
+      $wpdb->query('commit');
+
+    }
+
   }
 
   public function generateWpPostMetaImage() {

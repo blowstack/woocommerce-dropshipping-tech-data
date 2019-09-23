@@ -24,6 +24,11 @@ class TechDataProductGenerator {
      $WpProductRepository->generateWpPostMetaSku();
    }
 
+  public function generatePostMetaManufacturer() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaManufacturer();
+  }
+
   public function generatePostMetaPrice() {
     $WpProductRepository = new WpProductRepository();
     $WpProductRepository->generateWpPostMetaPrice();
@@ -82,13 +87,9 @@ class TechDataProductGenerator {
     $WpProductRepository->generateWpPostMetaImage();
   }
 
-  public function updatePriceByMargin() {
-    $WpProductRepository = new WpProductRepository();
-    $WpProductRepository->updatePriceByMargin();
-  }
-
   public function updatePriceByMarginAndCost() {
     $WpProductRepository = new WpProductRepository();
     $WpProductRepository->updatePriceByMarginAndCost();
   }
+
 }

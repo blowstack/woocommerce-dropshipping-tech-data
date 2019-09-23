@@ -21,9 +21,7 @@ if ( ! function_exists( 'add_action')) {
 }
 
 
-
 class DropShipping {
-
 
   public $plugin_name;
 
@@ -39,12 +37,13 @@ class DropShipping {
 
     global $wpdb;
 
-    $table_name = $wpdb->prefix . "dropshipping_techdata_soft_temp";
+    $table_name_soft_temp = $wpdb->prefix . "dropshipping_techdata_soft_temp";
+    $table_name_profit = $wpdb->prefix . "dropshipping_profit";
 
 //    $charset_collate = $wpdb->get_charset_collate();
     $charset_collate = " character set utf8 collate utf8_polish_ci";
 
-    $create_table = "CREATE TABLE $table_name (
+    $dropshipping_techdata_soft_temp = "CREATE TABLE $table_name_soft_temp (
                     distributor_id int(11) NOT NULL,
                     manufacturer_id varchar(25) NULL,
                     brand varchar(1000) NULL,
@@ -60,11 +59,21 @@ class DropShipping {
                     )
                      $charset_collate";
 
-    $alter_table = "alter table wp_term_taxonomy add profit_margin float default 1 null";
+    $dropshipping_profit = "CREATE TABLE $table_name_profit (
+                      id int(11) auto_increment,
+                      range_from decimal(8,2) NOT NULL,
+                      range_to decimal(8,2) NOT NULL,
+                      profit float NOT NULL,
+                      PRIMARY KEY (id)
+                     )
+                     $charset_collate";
+
+//    $alter_table = "alter table wp_term_taxonomy add profit_margin float default 1 null";
 
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-    dbDelta( $create_table );
-    $wpdb->query( $alter_table );
+    dbDelta( $dropshipping_techdata_soft_temp );
+    dbDelta( $dropshipping_profit );
+//    $wpdb->query( $alter_table );
   }
 
   function uninstall() {
@@ -224,6 +233,20 @@ function woocommerce_product_custom_fields_display() {
   }
 }
 
+function register_myclass() {
+  class TechDataProduct extends WC_Product {
+
+    public function __construct($product = 0) {
+      parent::__construct($product);
+    }
+
+
+
+  }
+}
+
+add_action( 'init', 'register_myclass' );
+
 // display in frontend additional fields
 add_action( 'woocommerce_before_add_to_cart_button', 'woocommerce_product_custom_fields_display' );
 
@@ -234,3 +257,52 @@ add_action('woocommerce_product_options_general_product_data', 'woocommerce_prod
 add_action('woocommerce_process_product_meta', 'woocommerce_product_custom_fields_save');
 
 register_activation_hook(__FILE__, [ $DropShipping , 'install']);
+
+//add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
+add_action( 'order_software_tech_data', 'placeOrderTechData');
+function placeOrderTechData( $order ) {
+
+  include_once(ABSPATH . 'TechDataApi.php');
+  global $wpdb;
+
+  $status = $order->get_status();
+
+  if ($status != 'pending' && $status != 'completed' && $status != 'processing') {
+    return TechDataApi::printWarning();
+  }
+
+
+  $orderId = $order->get_id();
+  $Items = $order->get_items();
+
+
+  $counter = 0;
+  $softwareItems = [];
+
+  foreach ($Items as $item) {
+    $productId = $item['product_id'];
+    $product = new WC_Product($productId);
+
+    if ($product->is_virtual()) {
+      $softwareItems[$counter]['sku'] = $product->get_sku();
+      $softwareItems[$counter]['quantity'] = $item['quantity'];
+    }
+    $counter++;
+  }
+
+  $TechDataApi = new TechDataApi($orderId, $softwareItems);
+  $TechDataApi->placeOrder();
+
+  $wpdb->insert('orders_tech_data', array('order_id' => $order->get_id(), 'order_reference_no' => $TechDataApi->getOrderReferenceNo(), 'response_code' => $TechDataApi->getResponseCode(), 'response_message' => $TechDataApi->getResponseMessage(),//    'full'    => json_encode($TechDataApi->getOrderResponseItems()),
+  ));
+
+  $orderTechDataId = $wpdb->insert_id;
+  $orderResponseItems = $TechDataApi->getOrderResponseItems();
+
+  foreach ($orderResponseItems as $item) {
+
+    if ($item['distributorItemIdentifier'] && $item['orderlineReferenceNo']) {
+      $wpdb->insert('order_items_tech_data', array('order_tech_data_id' => $orderTechDataId, 'distributor_item_identifier' => $item['distributorItemIdentifier'], 'order_line_reference_no' => $item['orderlineReferenceNo'],));
+    }
+  }
+};

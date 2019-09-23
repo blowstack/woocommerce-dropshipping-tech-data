@@ -18,6 +18,7 @@
     $TechDataFTPHardware->importFromTechData();
     $TechDataProductGenerator->generatePosts('hardware');
     $TechDataProductGenerator->generatePostMetaSku();
+    $TechDataProductGenerator->generatePostMetaManufacturer();
     $TechDataProductGenerator->generatePostMetaPrice();
     $TechDataProductGenerator->generatePostMetaRegularPrice();
     $TechDataProductGenerator->generatePostMetaStock();
@@ -64,7 +65,7 @@
         '_edit_last' => 1,
       ]
     );
-    $TechDataProductGenerator->updatePriceByMargin();
+    $TechDataProductGenerator->updatePriceByMarginAndCost();
 
   }
 
