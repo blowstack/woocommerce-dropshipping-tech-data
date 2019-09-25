@@ -11,20 +11,90 @@ class WpProductRepository {
     $this->wpdb = $wpdb;
   }
 
+  public function insertRawFromCSV($table_name, $file_path) {
+    $wpdb = $this->wpdb;
+
+    $wpdb->query("
+    LOAD DATA  INFILE '{$file_path}'
+    IGNORE INTO TABLE $table_name
+    FIELDS TERMINATED BY ';' ENCLOSED BY '\"'
+    LINES TERMINATED BY '\r\n'
+    IGNORE 1 LINES
+    ");
+  }
   public function insertFromCSV($table_name, $distributor_id, $manufacturer_id, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping) {
     $wpdb = $this->wpdb;
     $wpdb->query("insert ignore into $table_name(distributor_id, manufacturer_id, brand, description, price, stock, category_1, category_2, ean, status, dropshipping)
                                 values('$distributor_id', '$manufacturer_id', '$brand', '$description', '$price', '$stock', '$category_1', '$category_2', '$ean', '$status', '$dropshipping')");
   }
 
-  public function insertPriceFromCSV($table_name, $distributor_id, $price) {
+  public function insertMaterialsIntoDropshipping($target_table_name, $source_table_name) {
     $wpdb = $this->wpdb;
+
+    $wpdb->query("insert ignore into $target_table_name(distributor_id, manufacturer_id, brand, description, price, stock, category_1, category_2, ean, status, dropshipping)
+                        select SapNo, PartNo, Vendor, Nazwa, ' ', Magazyn, FamilyPr_PL, PodklasaPr_PL, EAN, 'live', 'hardware'
+                        from $source_table_name");
+  }
+
+  public function updateDropshippingHardware($target_table_name, $source_prices_table_name, $source_stock_table_name, $source_profit_table_name) {
+    $wpdb = $this->wpdb;
+
+    // prices
     $wpdb->query('start transaction');
-    $wpdb->query("update $table_name
-                        set price = $price
-                        where distributor_id = '$distributor_id'");
+    $wpdb->query("update $target_table_name target
+                        inner join $source_prices_table_name source
+                        set target.price = source.Cena_w_TD
+                        where distributor_id = source.SapNo");
     $wpdb->query('commit');
 
+    // stock
+    $wpdb->query('start transaction');
+    $wpdb->query("update $target_table_name target
+                        inner join $source_stock_table_name source
+                        set target.stock = source.Magazyn
+                        where distributor_id = source.SapNo");
+    $wpdb->query('commit');
+
+
+
+  }
+
+  public function clearTemporaryTables(array $tables_names) {
+    $wpdb = $this->wpdb;
+
+    foreach ($tables_names as $table_name) {
+      $wpdb->query('start transaction');
+      $wpdb->query("truncate table $table_name");
+      $wpdb->query('commit');
+    }
+  }
+
+  /**
+   * @param $table_name
+   * @return array|object|null
+   */
+  public function getForCSV() {
+    $wpdb = $this->wpdb;
+
+    $products = $wpdb->get_results("
+                        select  sku.meta_value as sap_no, manufacturer.meta_value as producer_code, vendor.meta_value as vendor, post.post_title as title,  price.meta_value as price, stock.meta_value as stock, round(price.meta_value - cost.meta_value,2) as profit
+                        from wp_posts post
+                        inner join wp_postmeta sku on post.id = sku.post_id
+                        inner join wp_postmeta stock on post.id = stock.post_id
+                        inner join wp_postmeta manufacturer on post.id = manufacturer.post_id
+                        inner join wp_postmeta price on post.id = price.post_id
+                        inner join wp_postmeta cost on post.id = cost.post_id
+                        inner join wp_postmeta vendor on post.id = vendor.post_id
+                        where post.post_type = 'product'
+                        and sku.meta_key = '_sku'
+                        and stock.meta_key = '_stock'
+                        and manufacturer.meta_key = '_manufacturer_id'
+                        and price.meta_key = '_regular_price'
+                        and cost.meta_key = '_cost'
+                        and vendor.meta_key = '_brand'
+                        ");
+
+    return $products;
   }
 
 
@@ -142,7 +212,6 @@ class WpProductRepository {
   }
 
   public function generateWpPostMetaRegularPrice() {
-    //                          post.id, '_regular_price', pt.price + (select profit_margin from wp_terms where
     $wpdb = $this->wpdb;
     $wpdb->query('start transaction');
     $wpdb->query("insert into wp_postmeta
@@ -362,57 +431,6 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
-//  public function updatePriceByMarginAndCost() {
-//
-//    $wpdb = $this->wpdb;
-//
-//    $wpdb->query('alter table wp_postmeta add column meta_temp int');
-//    $wpdb->query('start transaction');
-//    $wpdb->query('set @postId = 0');
-//    $wpdb->query("update wp_postmeta
-//                        set `meta_temp` = (@postId := post_id),
-//                            `meta_value` = meta_value + (meta_value *
-//                                                                    (select profit_margin
-//                                                                       from wp_term_taxonomy taxonomy
-//                                                                                inner join wp_term_relationships relations
-//                                                                                           on relations.term_taxonomy_id = taxonomy.term_taxonomy_id
-//                                                                       where relations.object_id = @postId
-//                                                                         and taxonomy.taxonomy = 'product_cat'
-//                                                                    limit 1) / 100
-//                                                          )
-//                        where `meta_key` = '_regular_price' or `meta_key` = '_price' ");
-//    $wpdb->query('commit');
-//    $wpdb->query('alter table wp_postmeta drop column meta_temp');
-//
-//    $wpdb->query("update wp_postmeta
-//                        set `meta_value` = round(meta_value, 2)
-//                        where `meta_key` = '_regular_price' or `meta_key` = '_price'");
-//  }
-
-  public function updatePriceByMarginAndCost() {
-    $wpdb = $this->wpdb;
-
-    $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit where profit is not null");
-
-    foreach ($profits as $profit) {
-      $profit_value = $profit->profit;
-      $range_from = $profit->range_from;
-      $range_to = $profit->range_to;
-
-      $wpdb->query('start transaction');
-      $wpdb->query("update wp_postmeta meta_price
-                          inner join wp_postmeta meta_cost on meta_cost.post_id = meta_price.post_id          
-                          set meta_price.meta_value = round(meta_cost.meta_value + meta_price.meta_value * $profit_value / 100, 2)
-                          where (meta_price.meta_key = '_price' || meta_price.meta_key = '_regular_price')
-                          and meta_cost.meta_key = '_cost'
-                          and meta_cost.meta_value >= $range_from
-                          and meta_cost.meta_value <= $range_to");
-      $wpdb->query('commit');
-
-    }
-
-  }
-
   public function generateWpPostMetaImage() {
 
     $wpdb = $this->wpdb;
@@ -434,6 +452,43 @@ class WpProductRepository {
                         and image.post_type = 'attachment'");
     $wpdb->query('commit');
   }
+
+  public function updatePrice() {
+    $wpdb = $this->wpdb;
+
+    $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit where profit is not null");
+
+    foreach ($profits as $profit) {
+      $profit_value = $profit->profit;
+      $range_from = $profit->range_from;
+      $range_to = $profit->range_to;
+
+      $wpdb->query('start transaction');
+      $wpdb->query("update wp_postmeta meta_price
+                          inner join wp_postmeta meta_cost on meta_cost.post_id = meta_price.post_id          
+                          set meta_price.meta_value = round(meta_cost.meta_value + meta_price.meta_value * $profit_value / 100, 2)
+                          where (meta_price.meta_key = meta_price.meta_key = '_regular_price')
+                          and meta_cost.meta_key = '_cost'
+                          and meta_cost.meta_value >= $range_from
+                          and meta_cost.meta_value <= $range_to");
+      $wpdb->query('commit');
+    }
+  }
+
+  public function updateStock() {
+    $wpdb = $this->wpdb;
+
+      $wpdb->query('start transaction');
+      $wpdb->query("update wp_postmeta current_stock
+                          inner join wp_posts post on post.ID = current_stock.post_id          
+                          inner join wp_dropshipping_techdata_soft_temp dropshipping_temp on dropshipping_temp.distributor_id = post.own_migration          
+                          set current_stock.meta_value = dropshipping_temp.stock
+                          where current_stock.meta_key = '_stock'");
+      $wpdb->query('commit');
+    }
+
+
+
 
 
 }
