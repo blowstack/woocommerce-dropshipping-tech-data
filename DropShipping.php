@@ -69,6 +69,7 @@ class DropShipping {
     $TablesRepository->createTemporaryHardwareMaterialsTable();
     $TablesRepository->createTemporaryHardwarePricesTable();
     $TablesRepository->createTemporarySoftwareTable();
+    $TablesRepository->alterWpPostsTable();
 
   }
 

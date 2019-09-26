@@ -144,7 +144,7 @@ class WpProductRepository {
                           post_author, post_date, post_date_gmt, post_content,
                           post_title, post_excerpt, post_status, comment_status,
                           ping_status, post_name, to_ping, pinged,
-                          post_modified, post_modified_gmt, post_content_filtered, post_type, own_migration
+                          post_modified, post_modified_gmt, post_content_filtered, post_type, dropshipping_id
                         )
 
                         select
@@ -157,7 +157,7 @@ class WpProductRepository {
                         and NOT EXISTS(
                               SELECT 1
                               FROM wp_posts
-                              WHERE `own_migration` = wp_dropshipping_techdata_soft_temp.distributor_id
+                              WHERE `dropshipping_id` = wp_dropshipping_techdata_soft_temp.distributor_id
                               )");
     $wpdb->query('commit');
   }
@@ -177,7 +177,7 @@ class WpProductRepository {
                         select
                           post.id, '$meta', '$value'
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -199,7 +199,7 @@ class WpProductRepository {
                         select
                           post.id, '_sku', pt.distributor_id
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -220,7 +220,7 @@ class WpProductRepository {
                         select
                           post.id, '_manufacturer_id', pt.manufacturer_id
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -241,7 +241,7 @@ class WpProductRepository {
                         select
                           post.id, '_price', pt.price
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -262,7 +262,7 @@ class WpProductRepository {
                         select
                           post.id, '_regular_price', pt.price 
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -283,7 +283,7 @@ class WpProductRepository {
                         select
                           post.id, '_stock', pt.stock
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -304,7 +304,7 @@ class WpProductRepository {
                         select
                           post.id, '_manufacturer_id', pt.manufacturer_id 
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -325,7 +325,7 @@ class WpProductRepository {
                         select
                           post.id, '_cost', pt.price 
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -346,7 +346,7 @@ class WpProductRepository {
                         select
                           post.id, '_brand', pt.brand 
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -367,7 +367,7 @@ class WpProductRepository {
                         select
                           post.id, '_dropshipping', '$dropshipping' 
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         where NOT EXISTS(
                               SELECT 1
                               FROM wp_postmeta
@@ -449,7 +449,7 @@ class WpProductRepository {
                         )
                         select post.id, @simple_product, 0
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration;");
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id;");
     $wpdb->query('commit');
   }
 
@@ -469,7 +469,7 @@ class WpProductRepository {
                         )
                         select post.id, @product_lang, 0
                         from $table_name_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration;");
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id;");
     $wpdb->query('commit');
   }
 
@@ -488,7 +488,7 @@ class WpProductRepository {
                         )
                         select post.id as object_id, taxonomy.term_taxonomy_id, 0
                         from $table_name_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         inner join $table_name_terms term on term.name = pt.category_1
                         inner join $table_name_term_taxonomy taxonomy on taxonomy.term_id = term.term_id");
     $wpdb->query('commit');
@@ -508,7 +508,7 @@ class WpProductRepository {
                         select
                           post.id, '_thumbnail_id', image.id
                         from wp_posts post
-                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.own_migration
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
                         inner join $table_name_posts image on image.post_title = pt.brand
                         where NOT EXISTS(
                               SELECT 1
@@ -550,7 +550,7 @@ class WpProductRepository {
       $wpdb->query('start transaction');
       $wpdb->query("update $table_name_postmeta current_stock
                           inner join $table_name_posts post on post.ID = current_stock.post_id          
-                          inner join wp_dropshipping_techdata_soft_temp dropshipping_temp on dropshipping_temp.distributor_id = post.own_migration          
+                          inner join wp_dropshipping_techdata_soft_temp dropshipping_temp on dropshipping_temp.distributor_id = post.dropshipping_id          
                           set current_stock.meta_value = dropshipping_temp.stock
                           where current_stock.meta_key = '_stock'");
       $wpdb->query('commit');

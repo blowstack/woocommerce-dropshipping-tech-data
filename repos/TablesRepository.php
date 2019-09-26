@@ -10,6 +10,7 @@ class TablesRepository {
   static $table_name_temp_hard_materials= "temporary_hard_materials";
   static $table_name_temp_hard_prices = "temporary_hard_prices";
   static $table_name_temp_soft = "temporary_soft";
+  static $table_name_wp_posts = "posts";
   private $charset_collate;
 
   public function __construct() {
@@ -64,6 +65,17 @@ class TablesRepository {
     $prefixes = DropShipping::getTablePrefixes();
     return $prefixes. self::$table_name_temp_soft;
   }
+
+  /**
+   * @return string
+   */
+  public static function getTableNameWpPosts(): string {
+    global $wpdb;
+
+    $prefix = $wpdb->prefix;
+    return $prefix. self::$table_name_wp_posts;
+  }
+
 
   /**
    * @param $table_name
@@ -206,6 +218,15 @@ class TablesRepository {
     return $sql;
   }
 
+  private function getAlterWpPostTableSQL() {
+
+    $table_name = $this->getTableNameWpPosts();
+
+    $sql = "alter table $table_name
+            add dropshipping_id varchar(50) null;";
+
+    return $sql;
+  }
 
   public function createProductTable(): void {
 
@@ -237,6 +258,12 @@ class TablesRepository {
 
     $sql = $this->getTemporarySoftwareTableSQL();
     dbDelta( $sql );
+  }
+
+  public function alterWpPostsTable() {
+    global $wpdb;
+    $sql = $this->getAlterWpPostTableSQL();
+    $wpdb->query($sql);
   }
 
 }
