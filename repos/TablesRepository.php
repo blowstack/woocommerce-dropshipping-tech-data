@@ -234,14 +234,14 @@ class TablesRepository {
     $table_name = $this->getTableNameFtpConfig();
     $charset_collate = $this->charset_collate;
 
-    $sql = "create table $table_name (
-            id int auto_increment,
+    $sql = "CREATE TABLE $table_name (
+            id int not null,
             dropshipping_type varchar(8) not null,
             user varchar(255) not null,
             password varchar(255) not null,
             server_ip varchar(50) not null,
             file_name varchar(255) not null,
-            primary key (id)
+            PRIMARY KEY (id)
             )
             $charset_collate";
 
@@ -254,8 +254,8 @@ class TablesRepository {
 
     $table_name = $this->getTableNameWpPosts();
 
-    $sql = "alter table $table_name
-            add dropshipping_id varchar(50) null;";
+    $sql = "ALTER TABLE $table_name
+            ADD COLUMN dropshipping_id varchar(50) null;";
 
     return $sql;
   }
