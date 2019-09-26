@@ -1,28 +1,33 @@
 <?php
 
 /*
- * TechDataSoftware
+ * TechDataProductGenerator
  */
 class TechDataProductGenerator {
 
-  public function __construct( ) {
+  private $dropshipping_type;
+
+  public function __construct($dropshipping_type) {
     require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
+    $this->dropshipping_type = $dropshipping_type;
   }
 
-   public function generatePosts($dropshipping) {
-     $WpProductRepository = new WpProductRepository();
-     $WpProductRepository->generateWpPosts($dropshipping);
-   }
+  public function generatePosts() {
+    $dropshipping_type = $this->dropshipping_type;
 
-   public function generateWpPostMetasBasic(array $post_metas) {
-     $WpProductRepository = new WpProductRepository();
-     $WpProductRepository->generateWpPostMetasBasic($post_metas);
-   }
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPosts($dropshipping_type);
+  }
 
-   public function generatePostMetaSku() {
-     $WpProductRepository = new WpProductRepository();
-     $WpProductRepository->generateWpPostMetaSku();
-   }
+  public function generateWpPostMetasBasic(array $post_metas) {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetasBasic($post_metas);
+  }
+
+  public function generatePostMetaSku() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->generateWpPostMetaSku();
+  }
 
   public function generatePostMetaManufacturer() {
     $WpProductRepository = new WpProductRepository();
@@ -54,14 +59,18 @@ class TechDataProductGenerator {
     $WpProductRepository->generateWpPostMetaBrand();
   }
 
-  public function generatePostMetaDropShipping($dropshipping) {
+  public function generatePostMetaDropShipping() {
+    $dropshipping_type = $this->dropshipping_type;
+
     $WpProductRepository = new WpProductRepository();
-    $WpProductRepository->generateWpPostMetaDropShipping($dropshipping);
+    $WpProductRepository->generateWpPostMetaDropShipping($dropshipping_type);
   }
 
-  public function getTechDataCategories(string $dropshipping): array {
+  public function getTechDataCategories(): array {
+    $dropshipping_type = $this->dropshipping_type;
+
     $WpProductRepository = new WpProductRepository();
-    $categories = $WpProductRepository->getTechDataCategories($dropshipping);
+    $categories = $WpProductRepository->getTechDataCategories($dropshipping_type);
     return $categories;
   }
 

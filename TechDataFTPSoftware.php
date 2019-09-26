@@ -39,7 +39,9 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
 
     $this->insertRawCSVToTemporaryTables($table_name_temporary_software, $csv_file_path,"'\t'");
     $this->insertSoftwareIntoDropshipping($table_name_product, $table_name_temporary_software);
+    $this->updateDropshippingSoftware($table_name_product, $table_name_temporary_software);
 
-    $this->clearTemporaryTables([ $table_name_temporary_software ]);
+
+     $this->clearTemporaryTables([ $table_name_temporary_software ]);
    }
 }

@@ -76,6 +76,21 @@ class WpProductRepository {
 
   }
 
+  public function updateDropshippingSoftware($target_table_name, $source_products_table_name) {
+    $wpdb = $this->wpdb;
+
+    // prices and stock
+    $wpdb->query('start transaction');
+    $wpdb->query("update $target_table_name target
+                        inner join $source_products_table_name source
+                        set target.price = source.Price,
+                            target.stock = source.Stock
+                        where target.distributor_id = source.ProductId");
+    $wpdb->query('commit');
+  }
+
+
+
   public function clearTemporaryTables(array $tables_names) {
     $wpdb = $this->wpdb;
 

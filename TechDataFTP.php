@@ -238,6 +238,15 @@ abstract class TechDataFTP {
     $WpProductRepository->updateDropshippingHardware($target_table_name, $source_prices_table_name, $source_stock_table_name);
   }
 
+  /**
+   * @param $target_table_name
+   * @param $source_product_table_name
+   */
+  protected function  updateDropshippingSoftware($target_table_name, $source_product_table_name): void {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->updateDropshippingSoftware($target_table_name, $source_product_table_name);
+  }
+
   protected function clearTemporaryTables(array $tables_names) {
     $WpProductRepository = new WpProductRepository();
     $WpProductRepository->clearTemporaryTables($tables_names);
