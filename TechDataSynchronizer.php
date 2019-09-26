@@ -31,8 +31,6 @@ class TechDataSynchronizer {
     }
 
     $this->ProductGenerator = new TechDataProductGenerator($dropshipping_type);
-
-
   }
 
 
