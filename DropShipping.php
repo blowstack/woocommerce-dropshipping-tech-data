@@ -5,7 +5,7 @@
  */
 
 /*
- Plugin name: DropShipping Techdata WooCommerce edition
+ Plugin name: DropShipping Techdata WooCommerce Edition
  Description: This plugin provides interface to interact with Techdata warehouses using WooCommerce.
  */
 
@@ -23,57 +23,55 @@ if ( ! function_exists( 'add_action')) {
 
 class DropShipping {
 
+
+
   public $plugin_name;
+  public static $plugin_table_prefix = 'dropshipping_';
+  public static $csv_folder_path = "/upload/csv/";
+  public static $zip_folder_path = "/upload/zip/";
+  public static $type_software = 'software';
+  public static $type_hardware = 'hardware';
 
   function __construct() {
     $this->plugin_name = plugin_basename(__FILE__);
     require_once( dirname( __FILE__ ) . '/TechDataProductGenerator.php' );
     require_once( dirname( __FILE__ ) . '/TechDataFTPSoftware.php' );
     require_once( dirname( __FILE__ ) . '/TechDataFTPHardware.php' );
+    require_once( dirname( __FILE__ ) . '/repos/TablesRepository.php' );
+  }
 
+  /**
+   * @return string
+   */
+  public static function getTablePrefixes() {
+    global $wpdb;
+    return $wpdb->prefix . self::$plugin_table_prefix;
+  }
+
+  /**
+   * @return string
+   */
+  public static function getCsvFolderPath() {
+    return dirname(__FILE__) . self::$csv_folder_path;
+  }
+
+  /**
+   * @return string
+   */
+  public static function getZipFolderPath() {
+    return dirname(__FILE__) . self::$zip_folder_path;
   }
 
   function install() {
 
-    global $wpdb;
+    // create all required tables and alternations
+    $TablesRepository = new TablesRepository();
+    $TablesRepository->createProductTable();
+    $TablesRepository->createProfitTable();
+    $TablesRepository->createTemporaryHardwareMaterialsTable();
+    $TablesRepository->createTemporaryHardwarePricesTable();
+    $TablesRepository->createTemporarySoftwareTable();
 
-    $table_name_soft_temp = $wpdb->prefix . "dropshipping_techdata_soft_temp";
-    $table_name_profit = $wpdb->prefix . "dropshipping_profit";
-
-//    $charset_collate = $wpdb->get_charset_collate();
-    $charset_collate = " character set utf8 collate utf8_polish_ci";
-
-    $dropshipping_techdata_soft_temp = "CREATE TABLE $table_name_soft_temp (
-                    distributor_id int(11) NOT NULL,
-                    manufacturer_id varchar(25) NULL,
-                    brand varchar(1000) NULL,
-                    description text NULL,
-                    price decimal(8,2),
-                    stock varchar(100),
-                    category_1 varchar(105) NULL,
-                    category_2 varchar(105) NULL,
-                    ean varchar(130) NULL,
-                    status varchar(150) NOT NULL,
-                    dropshipping varchar(100) NULL,
-                    PRIMARY KEY  (distributor_id)
-                    )
-                     $charset_collate";
-
-    $dropshipping_profit = "CREATE TABLE $table_name_profit (
-                      id int(11) auto_increment,
-                      range_from decimal(8,2) NOT NULL,
-                      range_to decimal(8,2) NOT NULL,
-                      profit float NOT NULL,
-                      PRIMARY KEY (id)
-                     )
-                     $charset_collate";
-
-//    $alter_table = "alter table wp_term_taxonomy add profit_margin float default 1 null";
-
-    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-    dbDelta( $dropshipping_techdata_soft_temp );
-    dbDelta( $dropshipping_profit );
-//    $wpdb->query( $alter_table );
   }
 
   function uninstall() {
@@ -93,7 +91,6 @@ class DropShipping {
   function register() {
     add_action('admin_enqueue_scripts', [ $this, 'enqueue']);
     add_action('admin_menu', [ $this, 'add_admin_pages']);
-
     add_filter("plugin_action_links_$this->plugin_name", [ $this, 'settings_link']);
   }
 
@@ -103,9 +100,6 @@ class DropShipping {
     return $links;
   }
 
-  function custom_post_type() {
-//    register_post_type('techdata', ['public' => true, 'label' => 'Dropshipping']);
-  }
 
   function add_admin_pages() {
     add_menu_page('DropShipping', 'Dropshipping', 'manage_options', 'DropShipping', [ $this, 'admin_index'],'dashicons-store', 10);

@@ -1,17 +1,15 @@
-<div class="container">
-  <h2>Upload CSV</h2>
-
-  <?php
+<?php
 
   global $wpdb;
   global $wp_filesystem;
 
-  if ($_POST['sync']) {
+  if (isset($_POST['sync']) && $_POST['sync']) {
 
     $TechDataFTPHardware = new TechDataFTPHardware(
       '../wp-content/plugins/DropShipping/upload/zip/techdata_hard.zip',
       'Datapack_565134_' . date('Y-m-d') . '.zip',
       'ftp2.techdata-it-emea.com', 'TDITuser_107', 'TDPL@19492@74');
+
     $TechDataProductGenerator = new TechDataProductGenerator();
     $categories = $TechDataProductGenerator->getTechDataCategories('hardware');
     $TechDataProductGenerator->insertNewCategories($categories);
@@ -62,30 +60,21 @@
         '_stock_status' => 'instock',
         '_product_version' => '3.5.6',
         '_edit_lock' => '1564156041:1',
-        '_edit_last' => 1,
       ]
     );
-    $TechDataProductGenerator->updatePriceByMarginAndCost();
-
+    $TechDataProductGenerator->updatePrice();
+    $TechDataProductGenerator->updateStock();
   }
+?>
 
-  ?>
-
-</div>
-
-<div class="container">
-
+<div class="container" style="margin-top: 30px">
   <form method="post">
-    <input type="submit" name="sync" value="Ręczna synchronizacja">
+    <input type="submit" name="sync" value="Sync products from TechData">
     <?php
-      if ($_POST['sync']) {
+      if (isset($_POST['sync']) && $_POST['sync']) {
        echo 'ok';
       }
     ?>
     <br>
   </form>
-
 </div>
-
-
-

@@ -1,9 +1,9 @@
 <?php
 
-  if ($_POST['sync']) {
+  if (isset($_POST['sync']) && $_POST['sync']) {
 
     $TechDataFTPSoftware = new TechDataFTPSoftware(
-      '../wp-content/plugins/DropShipping/upload/csv/techdata_soft.csv',
+      'techdata_soft.csv',
       '0000565134.csv',
       '62.225.34.76', 'ESD565134', '9sWQvaP0');
     $TechDataProductGenerator = new TechDataProductGenerator();
@@ -59,16 +59,16 @@
         '_edit_last' => 1,
       ]
     );
-    $TechDataProductGenerator->updatePriceByMarginAndCost();
+    $TechDataProductGenerator->updatePrice();
+    $TechDataProductGenerator->updateStock();
   }
   ?>
 
-<div class="container">
-    <h2>Synchronizacja Software</h2>
+<div class="container" style="margin-top: 30px">
     <form method="post">
-    <input type="submit" name="sync" value="Ręczna synchronizacja">
+    <input type="submit" name="sync" value="Sync products from TechData">
     <?php
-    if ($_POST['sync']) {
+    if (isset($_POST['sync']) && $_POST['sync']) {
       echo 'ok';
     }
     ?>

@@ -87,9 +87,24 @@ class TechDataProductGenerator {
     $WpProductRepository->generateWpPostMetaImage();
   }
 
-  public function updatePriceByMarginAndCost() {
+  public function updatePrice() {
     $WpProductRepository = new WpProductRepository();
-    $WpProductRepository->updatePriceByMarginAndCost();
+    $WpProductRepository->updatePrice();
+  }
+
+  public function updateStock() {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->updateStock();
+  }
+
+  /**
+   * @param $table_name
+   * @return array|object|null
+   */
+  public function getForCSV(): array {
+    $WpProductRepository = new WpProductRepository();
+    $products = $WpProductRepository->getForCSV();
+    return $products;
   }
 
 }

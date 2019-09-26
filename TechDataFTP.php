@@ -6,15 +6,14 @@
 
 abstract class TechDataFTP {
 
-  protected $local_file_path;
+  protected $product_file_path;
+  protected $csv_price_file_path;
   protected $server_file_name;
   protected $ftp_ip;
   protected $ftp_user;
   protected $ftp_password;
   protected $filename;
-  protected $CSVcontents;
-  protected $CSVIndexes;
-  protected $table_name;
+  protected $product_file_contents;
   protected $wp_filesystem;
   protected $dropshipping;
 
@@ -22,19 +21,16 @@ abstract class TechDataFTP {
   public function __construct() {
 
     require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
-
-    global $wpdb;
     global $wp_filesystem;
 
-    $this->setTableName($wpdb->prefix . "dropshipping_techdata_soft_temp");
     $this->setWpFilesystem($wp_filesystem);
   }
 
   /**
    * @return mixed
    */
-  public function getCSVcontents() {
-    return $this->CSVcontents;
+  public function getproduct_file_contents() {
+    return $this->product_file_contents;
   }
 
   /**
@@ -59,10 +55,17 @@ abstract class TechDataFTP {
   }
 
   /**
-   * @param mixed $local_file_path
+   * @param mixed $product_file_path
    */
-  public function setLocalFilePath($local_file_path): void {
-    $this->local_file_path = $local_file_path;
+  public function setProductFilePath($product_file_path): void {
+    $this->product_file_path = $product_file_path;
+  }
+
+  /**
+   * @param mixed $csv_price_file_path
+   */
+  public function setCsvPriceFilePath($csv_price_file_path): void {
+    $this->csv_price_file_path = $csv_price_file_path;
   }
 
   /**
@@ -82,8 +85,15 @@ abstract class TechDataFTP {
   /**
    * @return mixed
    */
-  public function getLocalFilePath() {
-    return $this->local_file_path;
+  public function getProductFilePath() {
+    return $this->product_file_path;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getCsvPriceFilePath() {
+    return $this->csv_price_file_path;
   }
 
   /**
@@ -94,10 +104,10 @@ abstract class TechDataFTP {
   }
 
   /**
-   * @param mixed $CSVcontents
+   * @param mixed $product_file_contents
    */
-  public function setCSVcontents($CSVcontents): void {
-    $this->CSVcontents = $CSVcontents;
+  public function setproduct_file_contents($product_file_contents): void {
+    $this->product_file_contents = $product_file_contents;
   }
 
   /**
@@ -121,19 +131,6 @@ abstract class TechDataFTP {
     $this->ftp_password = $ftp_password;
   }
 
-  /**
-   * @return string
-   */
-  public function getTableName(): string {
-    return $this->table_name;
-  }
-
-  /**
-   * @param string $table_name
-   */
-  public function setTableName(string $table_name): void {
-    $this->table_name = $table_name;
-  }
 
   /**
    * @param mixed $ftp_user
@@ -172,25 +169,26 @@ abstract class TechDataFTP {
 
   protected function downloadContents() {
     $filename = $this->filename;
-    $this->CSVcontents =  file_get_contents($filename);
+    $this->product_file_contents =  file_get_contents($filename);
   }
 
   protected function writeContentsToFile() {
 
-    $local_file_path = $this->local_file_path;
-    $CSVcontents = $this->CSVcontents;
+    $product_file_path = $this->product_file_path;
+    $product_file_contents = $this->product_file_contents;
     $wp_filesystem = $this->getWpFilesystem();
 
-    if (!$wp_filesystem->put_contents($local_file_path, $CSVcontents, 'FS_CHMOD_FILE')) {
+    if (!$wp_filesystem->put_contents($product_file_path, $product_file_contents, 'FS_CHMOD_FILE')) {
       echo 'error saving file!';
     }
   }
 
+
   protected function extractFiles() {
     $zip = new ZipArchive;
-    $local_file_path = $this->getLocalFilePath();
-    if ($zip->open($local_file_path) === TRUE) {
-      $zip->extractTo('../wp-content/plugins/DropShipping/upload/csv/');
+    $product_file_path = $this->getProductFilePath();
+    if ($zip->open($product_file_path) === TRUE) {
+      $zip->extractTo(DropShipping::getCsvFolderPath());
       $zip->close();
     } else {
       echo 'failed';
@@ -199,107 +197,50 @@ abstract class TechDataFTP {
   }
 
   /**
-   * @param $distributor
-   * @param $manufacturer
-   * @param $brand
-   * @param $description
-   * @param $price
-   * @param $stock
-   * @param $category_1
-   * @param $category_2
-   * @param $ean
-   * @param $status
-   * @param $dropshipping
-   * @return array
+   * @param $table_name
+   * @param $file_path
+   * @param $termination
+   * instead of using slow PHP arrays with eventually effect in memory leak
+   * fast insert (but 1:1) csv file through mysql
+   * trade of is three additional tables for temporary data
    */
-  public function setCSVIndexes($distributor, $manufacturer, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status) {
-
-    $csv_indexes = [
-      'distributor_id' => $distributor,
-      'manufacturer_id' => $manufacturer,
-      'brand' => $brand,
-      'description' => $description,
-      'price' => $price,
-      'stock' => $stock,
-      'category_1' => $category_1,
-      'category_2' => $category_2,
-      'ean' => $ean,
-      'status' => $status,
-    ];
-    $this->CSVIndexes = $csv_indexes;
-  }
-
-  /**
-   * @return mixed
-   */
-  public function getCSVIndexes() {
-    return $this->CSVIndexes;
-  }
-
-  /**
-   * @param $CSVIndexes
-   */
-  protected function saveContentsToDB($delimeter, $CSVIndexes, $csv_file_path): void {
-
-    $header = true;
-    $file = fopen($csv_file_path, "r");
-    $table_name = $this->getTableName();
-    $dropshipping = $this->getDropshipping();
-
-    while (($emapData = fgetcsv($file, 0, $delimeter)) !== FALSE) {
-
-      $emapData = array_map("utf8_encode", $emapData);
-
-      // data header not included
-      if ($header) {
-        $header = false;
-        continue;
-      }
-      else {
-
-        $distributor_id = $emapData[$CSVIndexes['distributor_id']];
-        $manufacturer_id = $emapData[$CSVIndexes['manufacturer_id']];
-        $brand = $emapData[$CSVIndexes['brand']];
-        $description = str_replace("'", '', $emapData[$CSVIndexes['description']]);
-        $price = $CSVIndexes['price'] != '' ? $emapData[$CSVIndexes['price']] : 0;
-        $stock = $emapData[$CSVIndexes['stock']];
-        $category_1 = $emapData[$CSVIndexes['category_1']];
-        $category_2 = $emapData[$CSVIndexes['category_2']];
-        $ean = $emapData[$CSVIndexes['ean']];
-        $status = $CSVIndexes['status'] != '' ? $emapData[$CSVIndexes['status']] : 'live';
-
+  protected function insertRawCSVToTemporaryTables($table_name, $file_path, $termination): void {
         $WpProductRepository = new WpProductRepository();
-        $WpProductRepository->insertFromCSV($table_name, $distributor_id, $manufacturer_id, $brand, $description, $price, $stock, $category_1, $category_2, $ean, $status, $dropshipping);
-      }
-    }
+        $WpProductRepository->insertRawCSVToTemporaryTables($table_name, $file_path, $termination);
   }
 
   /**
-   * @param $csv_file_path
+   * @param $target_table_name
+   * @param $source_table_name
    */
-  protected function saveContentPriceToDB($csv_file_path): void {
+  protected function insertMaterialsIntoDropshipping($target_table_name, $source_table_name): void {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->insertMaterialsIntoDropshipping($target_table_name, $source_table_name);
+  }
 
-    $header_csv = true;
-    $file_price = fopen($csv_file_path, "r");
-    $table_name = $this->getTableName();
+  /**
+   * @param $target_table_name
+   * @param $source_table_name
+   */
+  protected function insertSoftwareIntoDropshipping($target_table_name, $source_table_name): void {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->insertSoftwareIntoDropshipping($target_table_name, $source_table_name);
+  }
 
-    while (($emapData = fgetcsv($file_price, 0, ";")) !== FALSE) {
+  /**
+   * @param $target_table_name
+   * @param $source_prices_table_name
+   * @param $source_stock_table_name
+   * @param $source_profit_table_name
+   */
+  protected function  updateDropshippingHardware($target_table_name, $source_prices_table_name, $source_stock_table_name): void {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->updateDropshippingHardware($target_table_name, $source_prices_table_name, $source_stock_table_name);
+  }
 
-      $emapData = array_map("utf8_encode", $emapData);
-
-      if ($header_csv) {
-        $header_csv = false;
-        continue;
-      }
-      else {
-
-        $distributor_id = $emapData[0];
-        $price = str_replace(',', '.', $emapData[1]);
-
-        $WpProductRepository = new WpProductRepository();
-        $WpProductRepository->insertPriceFromCSV($table_name, $distributor_id, $price);
-      }
-    }
+  protected function clearTemporaryTables(array $tables_names) {
+    $WpProductRepository = new WpProductRepository();
+    $WpProductRepository->clearTemporaryTables($tables_names);
   }
 
 }
