@@ -10,6 +10,7 @@ class TablesRepository {
   static $table_name_temp_hard_materials= "temporary_hard_materials";
   static $table_name_temp_hard_prices = "temporary_hard_prices";
   static $table_name_temp_soft = "temporary_soft";
+  static $table_name_ftp_config = "ftp_config";
   static $table_name_wp_posts = "posts";
   private $charset_collate;
 
@@ -65,6 +66,16 @@ class TablesRepository {
     $prefixes = DropShipping::getTablePrefixes();
     return $prefixes. self::$table_name_temp_soft;
   }
+
+  /**
+   * @return string
+   */
+  public static function getTableNameFtpConfig(): string {
+
+    $prefixes = DropShipping::getTablePrefixes();
+    return $prefixes. self::$table_name_ftp_config;
+  }
+
 
   /**
    * @return string
@@ -218,6 +229,27 @@ class TablesRepository {
     return $sql;
   }
 
+  private function getFtpConfigTableSQL(): string {
+
+    $table_name = $this->getTableNameFtpConfig();
+    $charset_collate = $this->charset_collate;
+
+    $sql = "create table $table_name (
+            id int auto_increment,
+            dropshipping_type varchar(8) not null,
+            user varchar(255) not null,
+            password varchar(255) not null,
+            server_ip varchar(50) not null,
+            file_name varchar(255) not null,
+            primary key (id)
+            )
+            $charset_collate";
+
+    return $sql;
+  }
+
+
+
   private function getAlterWpPostTableSQL() {
 
     $table_name = $this->getTableNameWpPosts();
@@ -257,6 +289,12 @@ class TablesRepository {
   public function createTemporarySoftwareTable(): void {
 
     $sql = $this->getTemporarySoftwareTableSQL();
+    dbDelta( $sql );
+  }
+
+  public function createFtpConfigTable(): void {
+
+    $sql = $this->getFtpConfigTableSQL();
     dbDelta( $sql );
   }
 

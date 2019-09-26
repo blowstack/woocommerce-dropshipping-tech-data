@@ -127,7 +127,6 @@ class WpProductRepository {
                         and cost.meta_key = '_cost'
                         and vendor.meta_key = '_brand'
                         ");
-
     return $products;
   }
 

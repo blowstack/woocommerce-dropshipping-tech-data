@@ -24,7 +24,7 @@ $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit");
 <?php
 
   if (isset($_POST['csv']) && $_POST['csv']) {
-    $TechDataProductGenerator = new TechDataProductGenerator();
+    $TechDataProductGenerator = new TechDataProductGenerator(DropShipping::$type_software);
     $products = $TechDataProductGenerator->getForCSV();
 
     ob_end_clean();
@@ -59,7 +59,7 @@ $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit");
         ]);
       }
     }
-    exit;
+    print_r($products);
   }
 ?>
 
