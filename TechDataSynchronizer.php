@@ -9,24 +9,38 @@ class TechDataSynchronizer {
   private $FTP;
   private $ProductGenerator;
 
+  /**
+   * TechDataSynchronizer constructor.
+   * @param $dropshipping_type
+   */
   public function __construct($dropshipping_type) {
 
     require_once( dirname( __FILE__ ) . '/TechDataFTPHardware.php' );
     require_once( dirname( __FILE__ ) . '/TechDataFTPSoftware.php' );
     require_once( dirname( __FILE__ ) . '/TechDataProductGenerator.php' );
 
+    $ConfigManager = new TechDataConfigManager();
+    $Config = $ConfigManager->getConfg($dropshipping_type);
+
     switch ($dropshipping_type) {
       case DropShipping::$type_software:
 
-        $this->FTP = new TechDataFTPSoftware( 'techdata_soft.csv',
-          '0000565134.csv',
-          '62.225.34.76', 'ESD565134', '9sWQvaP0');
+        $this->FTP = new TechDataFTPSoftware(
+          "techdata_soft.csv",
+          "$Config->file_name",
+          "$Config->server_ip",
+          "$Config->user",
+          "$Config->password"
+        );
         break;
 
       case DropShipping::$type_hardware:
-        $this->FTP = new TechDataFTPHardware('../wp-content/plugins/DropShipping/upload/zip/techdata_hard.zip',
+        $this->FTP = new TechDataFTPHardware(
+          '../wp-content/plugins/DropShipping/upload/zip/techdata_hard.zip',
           'Datapack_565134_' . date('Y-m-d') . '.zip',
-          'ftp2.techdata-it-emea.com', 'TDITuser_107', 'TDPL@19492@74');
+          'ftp2.techdata-it-emea.com',
+          'TDITuser_107',
+          'TDPL@19492@74');
         break;
     }
 
@@ -98,11 +112,5 @@ class TechDataSynchronizer {
     );
     $TechDataProductGenerator->updatePrice();
     $TechDataProductGenerator->updateStock();
-
   }
-
-
-
-
-
 }

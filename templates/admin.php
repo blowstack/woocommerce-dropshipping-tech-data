@@ -2,7 +2,6 @@
 
 global $wpdb;
 
-$categories = $wpdb->get_results("SELECT * FROM wp_term_taxonomy taxonomy where taxonomy.taxonomy = 'product_cat'");
 $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit");
 
 ?>
@@ -21,7 +20,37 @@ $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit");
   }
 ?>
 
-<?php
+
+<div class="container">
+  <form method="post">
+  <table width="30%" style="text-align: center">
+    <caption><h2>Profit Margin Table</h2></caption>
+    <tr>
+      <th>From</th>
+      <th>To</th>
+      <th>Profit</th>
+    </tr>
+    <?php
+    foreach ($profits as $profit) {
+        echo "<tr>
+              <td> $profit->range_from </td>
+              <td> $profit->range_to </td>
+              <td>  
+                <input type='text' name='$profit->id' value='$profit->profit' placeholder='enter percentage' required='required'> %
+              </td>
+              </tr>";
+    }
+    ?>
+  </table>
+    <input type="submit" name="save" value="Save and update">
+  </form>
+  <?php
+  if (isset($_POST['save']) && $_POST['save'] ) {
+    echo 'saved and updated!';
+  }
+  ?>
+
+  <?php
 
   if (isset($_POST['csv']) && $_POST['csv']) {
     $TechDataProductGenerator = new TechDataProductGenerator(DropShipping::$type_software);
@@ -59,36 +88,7 @@ $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit");
         ]);
       }
     }
-    print_r($products);
-  }
-?>
-
-<div class="container">
-  <form method="post">
-  <table width="30%" style="text-align: center">
-    <caption><h2>Profit Margin Table</h2></caption>
-    <tr>
-      <th>From</th>
-      <th>To</th>
-      <th>Profit</th>
-    </tr>
-    <?php
-    foreach ($profits as $profit) {
-        echo "<tr>
-              <td> $profit->range_from </td>
-              <td> $profit->range_to </td>
-              <td>  
-                <input type='text' name='$profit->id' value='$profit->profit' placeholder='enter percentage' required='required'> %
-              </td>
-              </tr>";
-    }
-    ?>
-  </table>
-    <input type="submit" name="save" value="Save and update">
-  </form>
-  <?php
-  if (isset($_POST['save']) && $_POST['save'] ) {
-    echo 'saved and updated!';
+    exit;
   }
   ?>
 

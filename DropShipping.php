@@ -24,7 +24,6 @@ if ( ! function_exists( 'add_action')) {
 class DropShipping {
 
 
-
   public $plugin_name;
   public static $plugin_table_prefix = 'dropshipping_';
   public static $csv_folder_path = "/upload/csv/";
@@ -34,9 +33,10 @@ class DropShipping {
 
   function __construct() {
     $this->plugin_name = plugin_basename(__FILE__);
+    require_once( dirname( __FILE__ ) . '/repos/TablesRepository.php' );
+    require_once( dirname( __FILE__ ) . '/TechDataConfigManager.php' );
     require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
     require_once( dirname( __FILE__ ) . '/TechDataProductGenerator.php' );
-    require_once( dirname( __FILE__ ) . '/repos/TablesRepository.php' );
   }
 
   /**

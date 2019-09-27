@@ -235,7 +235,7 @@ class TablesRepository {
     $charset_collate = $this->charset_collate;
 
     $sql = "CREATE TABLE $table_name (
-            id int not null,
+            id int auto_increment,
             dropshipping_type varchar(8) not null,
             user varchar(255) not null,
             password varchar(255) not null,
