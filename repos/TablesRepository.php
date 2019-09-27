@@ -11,7 +11,11 @@ class TablesRepository {
   static $table_name_temp_hard_prices = "temporary_hard_prices";
   static $table_name_temp_soft = "temporary_soft";
   static $table_name_ftp_config = "ftp_config";
+  static $table_name_orders = "orders";
+  static $table_name_order_items = "order_items";
+
   static $table_name_wp_posts = "posts";
+
   private $charset_collate;
 
   public function __construct() {
@@ -85,6 +89,24 @@ class TablesRepository {
 
     $prefix = $wpdb->prefix;
     return $prefix. self::$table_name_wp_posts;
+  }
+
+  /**
+   * @return string
+   */
+  public static function getTableNameOrders(): string {
+
+    $prefixes = DropShipping::getTablePrefixes();
+    return $prefixes. self::$table_name_orders;
+  }
+
+  /**
+   * @return string
+   */
+  public static function getTableNameOrderItems(): string {
+
+    $prefixes = DropShipping::getTablePrefixes();
+    return $prefixes. self::$table_name_order_items;
   }
 
 
@@ -248,6 +270,51 @@ class TablesRepository {
     return $sql;
   }
 
+  /**
+   * @param $table_name
+   * @param $charset_collate
+   * @return string
+   */
+  private function getOrderItemsTableSQL(): string {
+
+    $table_name = $this->getTableNameOrders();
+    $charset_collate = $this->charset_collate;
+
+    $sql = "CREATE TABLE $table_name (
+            id int auto_increment primary key,
+            order_tech_data_id int not null,
+            distributor_item_identifier varchar(255) not null,
+            order_line_reference_no varchar(255) not null
+            )
+            $charset_collate";
+
+    return $sql;
+  }
+
+  /**
+   * @param $table_name
+   * @param $charset_collate
+   * @return string
+   */
+  private function getOrdersTableSQL(): string {
+
+    $table_name = $this->getTableNameOrderItems();
+    $charset_collate = $this->charset_collate;
+
+    $sql = "CREATE TABLE $table_name (
+            id int auto_increment primary key,
+            order_id bigint not null,
+            created_at datetime default CURRENT_TIMESTAMP not null,
+            order_reference_no varchar(255) null,
+            response_code int null,
+            response_message varchar(45) null,
+            full text null
+            )
+            $charset_collate";
+
+    return $sql;
+  }
+
 
 
   private function getAlterWpPostTableSQL() {
@@ -297,6 +364,20 @@ class TablesRepository {
     $sql = $this->getFtpConfigTableSQL();
     dbDelta( $sql );
   }
+
+  public function createOrdersTable(): void {
+
+    $sql = $this->getOrdersTableSQL();
+    dbDelta( $sql );
+  }
+
+  public function createOrderItemsTable(): void {
+
+    $sql = $this->getOrderItemsTableSQL();
+    dbDelta( $sql );
+  }
+
+
 
   public function alterWpPostsTable() {
     global $wpdb;

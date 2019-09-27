@@ -63,7 +63,7 @@ class DropShipping {
 
   function install() {
 
-    // create all required tables and alternations
+    // create and make all required tables and alternations
     $TablesRepository = new TablesRepository();
     $TablesRepository->createProductTable();
     $TablesRepository->createProfitTable();
@@ -71,6 +71,8 @@ class DropShipping {
     $TablesRepository->createTemporaryHardwarePricesTable();
     $TablesRepository->createTemporarySoftwareTable();
     $TablesRepository->createFtpConfigTable();
+    $TablesRepository->createOrdersTable();
+    $TablesRepository->createOrderItemsTable();
     $TablesRepository->alterWpPostsTable();
 
   }
@@ -295,7 +297,7 @@ add_filter( 'posts_distinct', 'cf_search_distinct' );
 register_activation_hook(__FILE__, [ $DropShipping , 'install']);
 
 //add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
-add_action( 'order_software_tech_data', 'placeOrderTechData');
+add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
 function placeOrderTechData( $order ) {
 
   include_once(ABSPATH . 'TechDataApi.php');
@@ -329,7 +331,7 @@ function placeOrderTechData( $order ) {
   $TechDataApi = new TechDataApi($orderId, $softwareItems);
   $TechDataApi->placeOrder();
 
-  $wpdb->insert('orders_tech_data', array('order_id' => $order->get_id(), 'order_reference_no' => $TechDataApi->getOrderReferenceNo(), 'response_code' => $TechDataApi->getResponseCode(), 'response_message' => $TechDataApi->getResponseMessage(),//    'full'    => json_encode($TechDataApi->getOrderResponseItems()),
+  $wpdb->insert('orders_tech_data', array('order_id' => $order->get_id(), 'order_reference_no' => $TechDataApi->getOrderReferenceNo(), 'response_code' => $TechDataApi->getResponseCode(), 'response_message' => $TechDataApi->getResponseMessage(), 'full'    => json_encode($TechDataApi->getOrderResponseItems()),
   ));
 
   $orderTechDataId = $wpdb->insert_id;
