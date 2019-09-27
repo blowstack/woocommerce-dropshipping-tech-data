@@ -277,7 +277,7 @@ class TablesRepository {
    */
   private function getOrderItemsTableSQL(): string {
 
-    $table_name = $this->getTableNameOrders();
+    $table_name = $this->getTableNameOrderItems();
     $charset_collate = $this->charset_collate;
 
     $sql = "CREATE TABLE $table_name (
@@ -298,7 +298,7 @@ class TablesRepository {
    */
   private function getOrdersTableSQL(): string {
 
-    $table_name = $this->getTableNameOrderItems();
+    $table_name = $this->getTableNameOrders();
     $charset_collate = $this->charset_collate;
 
     $sql = "CREATE TABLE $table_name (

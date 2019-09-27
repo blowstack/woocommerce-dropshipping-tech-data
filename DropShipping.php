@@ -330,17 +330,19 @@ function placeOrderTechData( $order ) {
 
   $TechDataApi = new TechDataApi($orderId, $softwareItems);
   $TechDataApi->placeOrder();
+  $orders_table_name = TablesRepository::getTableNameOrders();
 
-  $wpdb->insert('orders_tech_data', array('order_id' => $order->get_id(), 'order_reference_no' => $TechDataApi->getOrderReferenceNo(), 'response_code' => $TechDataApi->getResponseCode(), 'response_message' => $TechDataApi->getResponseMessage(), 'full'    => json_encode($TechDataApi->getOrderResponseItems()),
+  $wpdb->insert("$orders_table_name", array('order_id' => $order->get_id(), 'order_reference_no' => $TechDataApi->getOrderReferenceNo(), 'response_code' => $TechDataApi->getResponseCode(), 'response_message' => $TechDataApi->getResponseMessage(), 'full'    => json_encode($TechDataApi->getOrderResponseItems()),
   ));
 
   $orderTechDataId = $wpdb->insert_id;
   $orderResponseItems = $TechDataApi->getOrderResponseItems();
+  $order_items_table_name = TablesRepository::getTableNameOrderItems();
 
   foreach ($orderResponseItems as $item) {
 
     if ($item['distributorItemIdentifier'] && $item['orderlineReferenceNo']) {
-      $wpdb->insert('order_items_tech_data', array('order_tech_data_id' => $orderTechDataId, 'distributor_item_identifier' => $item['distributorItemIdentifier'], 'order_line_reference_no' => $item['orderlineReferenceNo'],));
+      $wpdb->insert("$order_items_table_name", array('order_tech_data_id' => $orderTechDataId, 'distributor_item_identifier' => $item['distributorItemIdentifier'], 'order_line_reference_no' => $item['orderlineReferenceNo'],));
     }
   }
 };
