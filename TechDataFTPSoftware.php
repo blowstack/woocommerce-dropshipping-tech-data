@@ -21,7 +21,7 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
 
     $this->setDropshipping(DropShipping::$type_software);
     $this->setProductFilePath(DropShipping::getCsvFolderPath() . $product_file_path);
-    $this->setServerFileName($server_file_name);
+    $this->setServerFileName($server_file_name . '.csv');
     $this->setFtpIp($ftp_ip);
     $this->setFtpUser($ftp_user);
     $this->setFtpPassword($ftp_password);

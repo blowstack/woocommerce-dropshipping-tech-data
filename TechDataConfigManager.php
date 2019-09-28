@@ -23,13 +23,6 @@ class TechDataConfigManager {
 
     $Config = $ConfigManagerRepository->getConfig($dropshipping_type);
 
-//    if ($dropshipping_type == DropShipping::$type_software) {
-//      $Config[0]->file_name .= '.csv';
-//    }
-//    elseif ($dropshipping_type == DropShipping::$type_hardware) {
-//      $Config[0]->file_name .= '.zip';
-//    }
-
     return $Config[0] ?? null;
   }
   public function setConfig(array $config, $dropshipping_type): void {

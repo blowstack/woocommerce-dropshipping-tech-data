@@ -36,11 +36,12 @@ class TechDataSynchronizer {
 
       case DropShipping::$type_hardware:
         $this->FTP = new TechDataFTPHardware(
-          '../wp-content/plugins/DropShipping/upload/zip/techdata_hard.zip',
-          'Datapack_565134_' . date('Y-m-d') . '.zip',
-          'ftp2.techdata-it-emea.com',
-          'TDITuser_107',
-          'TDPL@19492@74');
+          'techdata_hard.zip',
+          "$Config->file_name",
+          "$Config->server_ip",
+          "$Config->user",
+          "$Config->password"
+        );
         break;
     }
 

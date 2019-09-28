@@ -23,14 +23,13 @@ class TechDataFTPHardware extends TechDataFTP implements TechDataFTPInterface {
     parent::__construct();
 
     $this->setDropshipping(DropShipping::$type_hardware);
-    $this->setProductFilePath($product_file_path);
-    $this->setServerFileName($server_file_name);
+    $this->setProductFilePath(DropShipping::getZipFolderPath() . $product_file_path);
+    $this->setServerFileName($server_file_name . '_' . date('Y-m-d') . '.zip');
     $this->setFtpIp($ftp_ip);
     $this->setFtpUser($ftp_user);
     $this->setFtpPassword($ftp_password);
     $this->setFilename("ftp://$this->ftp_user:$this->ftp_password@$this->ftp_ip/$this->server_file_name");
   }
-
 
    public function importFromTechData(): void {
 
