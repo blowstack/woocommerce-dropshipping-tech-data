@@ -200,9 +200,9 @@ abstract class TechDataFTP {
    * @param $table_name
    * @param $file_path
    * @param $termination
-   * instead of using slow PHP arrays with eventually effect in memory leak
+   * instead of using slow PHP arrays witch eventually effects in memory leak
    * fast insert (but 1:1) csv file through mysql
-   * trade of is three additional tables for temporary data
+   * trade off is three additional tables for temporary data
    */
   protected function insertRawCSVToTemporaryTables($table_name, $file_path, $termination): void {
         $WpProductRepository = new WpProductRepository();

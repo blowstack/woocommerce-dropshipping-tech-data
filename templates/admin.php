@@ -15,7 +15,7 @@ $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit");
       }
     }
 
-    $TechDataSoftware = new TechDataProductGenerator();
+    $TechDataSoftware = new TechDataProductGenerator(DropShipping::$type_software);
     $TechDataSoftware->updatePrice();
   }
 ?>

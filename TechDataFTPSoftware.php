@@ -30,8 +30,8 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
 
    public function importFromTechData(): void {
 
-    $this->downloadContents();
-    $this->writeContentsToFile();
+//    $this->downloadContents();
+//    $this->writeContentsToFile();
 
     $csv_file_path = $this->getProductFilePath();
     $table_name_product = TablesRepository::getTableNameProduct();

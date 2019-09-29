@@ -521,6 +521,16 @@ class WpProductRepository {
   public function updatePrice() {
     $wpdb = $this->wpdb;
     $table_name_postmeta = $this->table_name_postmeta;
+    $table_name_posts = $this->table_name_posts;
+
+    $wpdb->query('start transaction');
+    $wpdb->query("update $table_name_postmeta cost
+                        inner join $table_name_posts posts on posts.ID = cost.post_id          
+                        inner join wp_dropshipping_techdata_soft_temp dropshipping_product on posts.dropshipping_id = dropshipping_product.distributor_id          
+                        set cost.meta_value = dropshipping_product.price
+                        where cost.meta_key = '_cost'
+                        ");
+    $wpdb->query('commit');
 
     $profits = $wpdb->get_results("SELECT * FROM wp_dropshipping_profit where profit is not null");
 
@@ -532,13 +542,22 @@ class WpProductRepository {
       $wpdb->query('start transaction');
       $wpdb->query("update $table_name_postmeta meta_price
                           inner join $table_name_postmeta meta_cost on meta_cost.post_id = meta_price.post_id          
-                          set meta_price.meta_value = round(meta_cost.meta_value + meta_price.meta_value * $profit_value / 100, 2)
-                          where (meta_price.meta_key = meta_price.meta_key = '_regular_price')
+                          set meta_price.meta_value = round(meta_cost.meta_value + meta_cost.meta_value * $profit_value / 100, 2)
+                          where (meta_price.meta_key = '_regular_price')
                           and meta_cost.meta_key = '_cost'
                           and meta_cost.meta_value >= $range_from
                           and meta_cost.meta_value <= $range_to");
       $wpdb->query('commit');
     }
+
+    $wpdb->query('start transaction');
+    $wpdb->query("update $table_name_postmeta price
+                        inner join $table_name_postmeta regular_price on regular_price.post_id = price.post_id          
+                        set price.meta_value = regular_price.meta_value
+                        where (price.meta_key = '_price')
+                        and regular_price.meta_key = '_regular_price'");
+    $wpdb->query('commit');
+
   }
 
   public function updateStock() {
