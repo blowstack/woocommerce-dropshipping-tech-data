@@ -293,56 +293,43 @@ add_filter( 'posts_distinct', 'cf_search_distinct' );
 // search engine
 
 
-
 register_activation_hook(__FILE__, [ $DropShipping , 'install']);
-
-//add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
 add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
+
 function placeOrderTechData( $order ) {
 
   include_once(ABSPATH . 'TechDataApi.php');
   global $wpdb;
 
-  $status = $order->get_status();
+  $orders_table_name = TablesRepository::getTableNameOrders();
 
-  if ($status != 'pending' && $status != 'completed' && $status != 'processing') {
+  $status = $order->get_status();
+//  $restricted_statues = ['on-hold', 'failed', 'cancelled'];
+    $restricted_statues = ['on-hold', 'pending', 'failed', 'cancelled'];
+
+  // no payment or error
+  if (in_array($status, $restricted_statues)) {
     return TechDataApi::printWarning();
   }
 
-
   $orderId = $order->get_id();
   $Items = $order->get_items();
+  $dropshipping_software_order_check =  $wpdb->get_results("select * from $orders_table_name where order_id = '$orderId' and (response_code = 3002 or response_code = 3001)");
 
 
-  $counter = 0;
-  $softwareItems = [];
+  if (!$dropshipping_software_order_check && $status == 'processing') {
+//  if (!$dropshipping_software_order_check) {
 
-  foreach ($Items as $item) {
-    $productId = $item['product_id'];
-    $product = new WC_Product($productId);
+    $preparedOrderItems = TechDataApi::prepareSoftwareOrderItems($Items);
+    $TechDataApi = new TechDataApi($orderId, $preparedOrderItems);
+    $TechDataApi->placeOrder();
 
-    if ($product->is_virtual()) {
-      $softwareItems[$counter]['sku'] = $product->get_sku();
-      $softwareItems[$counter]['quantity'] = $item['quantity'];
-    }
-    $counter++;
+    $dropshipping_reference_no = $TechDataApi->getOrderReferenceNo();
+    $dropshipping_response_code = $TechDataApi->getResponseCode();
+    $dropshipping_response_message = $TechDataApi->getResponseMessage();
+    $dropshipping_response_items = $TechDataApi->getOrderResponseItems();
+    $TechDataApi->registerNewSoftwareOrder($orderId, $dropshipping_reference_no, $dropshipping_response_code, $dropshipping_response_message, $dropshipping_response_items);
   }
 
-  $TechDataApi = new TechDataApi($orderId, $softwareItems);
-  $TechDataApi->placeOrder();
-  $orders_table_name = TablesRepository::getTableNameOrders();
 
-  $wpdb->insert("$orders_table_name", array('order_id' => $order->get_id(), 'order_reference_no' => $TechDataApi->getOrderReferenceNo(), 'response_code' => $TechDataApi->getResponseCode(), 'response_message' => $TechDataApi->getResponseMessage(), 'full'    => json_encode($TechDataApi->getOrderResponseItems()),
-  ));
-
-  $orderTechDataId = $wpdb->insert_id;
-  $orderResponseItems = $TechDataApi->getOrderResponseItems();
-  $order_items_table_name = TablesRepository::getTableNameOrderItems();
-
-  foreach ($orderResponseItems as $item) {
-
-    if ($item['distributorItemIdentifier'] && $item['orderlineReferenceNo']) {
-      $wpdb->insert("$order_items_table_name", array('order_tech_data_id' => $orderTechDataId, 'distributor_item_identifier' => $item['distributorItemIdentifier'], 'order_line_reference_no' => $item['orderlineReferenceNo'],));
-    }
-  }
 };
