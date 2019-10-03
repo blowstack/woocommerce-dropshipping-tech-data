@@ -119,7 +119,8 @@ class DropShipping {
   }
 
   function enqueue() {
-    wp_enqueue_style('styles', plugins_url('/DropShipping/assets/dropshipping.css'), __FILE__ );
+      wp_enqueue_style('dropshipping_styles', plugins_url('/assets/dropshipping.css', __FILE__), [], '1');
+      wp_enqueue_script('dropshipping_scripts', plugins_url('/assets/dropshipping.js', __FILE__), [], '1');
   }
 }
 
@@ -223,6 +224,8 @@ function woocommerce_product_custom_fields_display() {
   }
 }
 
+
+// todo czy to jest potrzebne
 function register_myclass() {
   class TechDataProduct extends WC_Product {
 
@@ -234,6 +237,7 @@ function register_myclass() {
 
 register_activation_hook(__FILE__, [ $DropShipping , 'install']);
 
+// todo czy to jest potrzebne
 add_action( 'init', 'register_myclass' );
 
 // display in frontend additional fields
