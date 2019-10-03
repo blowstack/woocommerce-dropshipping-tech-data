@@ -20,7 +20,6 @@ if ( ! function_exists( 'add_action')) {
   exit;
 }
 
-
 class DropShipping {
 
 
@@ -78,8 +77,6 @@ class DropShipping {
   }
 
   function uninstall() {
-
-
     global $wpdb;
 
     $table_name = $wpdb->prefix . "dropshipping_techdata_temp";
@@ -89,7 +86,6 @@ class DropShipping {
     dbDelta( $sql );
 
   }
-
 
   function register() {
     add_action('admin_enqueue_scripts', [ $this, 'enqueue']);
@@ -131,8 +127,6 @@ if ( class_exists('DropShipping')) {
   $DropShipping = new DropShipping();
   $DropShipping->register();
 }
-
-
 
 function woocommerce_product_custom_fields() {
   global $woocommerce, $post;
@@ -213,7 +207,6 @@ function woocommerce_product_custom_fields_save($post_id)
 
 }
 
-
 function woocommerce_product_custom_fields_display() {
   global $post;
   // Check for the custom field value
@@ -236,11 +229,10 @@ function register_myclass() {
     public function __construct($product = 0) {
       parent::__construct($product);
     }
-
-
-
   }
 }
+
+register_activation_hook(__FILE__, [ $DropShipping , 'install']);
 
 add_action( 'init', 'register_myclass' );
 
@@ -252,6 +244,21 @@ add_action('woocommerce_product_options_general_product_data', 'woocommerce_prod
 
 // save additional fields
 add_action('woocommerce_process_product_meta', 'woocommerce_product_custom_fields_save');
+
+// place order
+add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
+
+//// cron ftp
+//add_action( 'dropshipping_software_sync', 'syncAllSoftwareFromTechData');
+
+
+// search engine
+add_filter('posts_join', 'cf_search_join' );
+
+add_filter( 'posts_where', 'cf_search_where' );
+
+add_filter( 'posts_distinct', 'cf_search_distinct' );
+// search engine
 
 
 
@@ -265,7 +272,6 @@ function cf_search_join( $join ) {
 
   return $join;
 }
-add_filter('posts_join', 'cf_search_join' );
 
 function cf_search_where( $where ) {
   global $pagenow, $wpdb;
@@ -278,7 +284,6 @@ function cf_search_where( $where ) {
 
   return $where;
 }
-add_filter( 'posts_where', 'cf_search_where' );
 
 function cf_search_distinct( $where ) {
   global $wpdb;
@@ -289,27 +294,24 @@ function cf_search_distinct( $where ) {
 
   return $where;
 }
-add_filter( 'posts_distinct', 'cf_search_distinct' );
 // search engine
 
 
-register_activation_hook(__FILE__, [ $DropShipping , 'install']);
-add_action( 'woocommerce_order_details_after_order_table', 'placeOrderTechData');
 
 function placeOrderTechData( $order ) {
 
-  include_once(ABSPATH . 'TechDataApi.php');
+  include_once(ABSPATH . 'TechDataSoftwareApi.php');
   global $wpdb;
 
   $orders_table_name = TablesRepository::getTableNameOrders();
 
   $status = $order->get_status();
-//  $restricted_statues = ['on-hold', 'failed', 'cancelled'];
-    $restricted_statues = ['on-hold', 'pending', 'failed', 'cancelled'];
+  $restricted_statues = ['on-hold', 'failed', 'cancelled'];
+//    $restricted_statues = ['on-hold', 'pending', 'failed', 'cancelled'];
 
   // no payment or error
   if (in_array($status, $restricted_statues)) {
-    return TechDataApi::printWarning();
+    return TechDataSoftwareApi::printWarning();
   }
 
   $orderId = $order->get_id();
@@ -317,19 +319,28 @@ function placeOrderTechData( $order ) {
   $dropshipping_software_order_check =  $wpdb->get_results("select * from $orders_table_name where order_id = '$orderId' and (response_code = 3002 or response_code = 3001)");
 
 
-  if (!$dropshipping_software_order_check && $status == 'processing') {
-//  if (!$dropshipping_software_order_check) {
+//  if (!$dropshipping_software_order_check && $status == 'processing') {
+  if (!$dropshipping_software_order_check) {
 
-    $preparedOrderItems = TechDataApi::prepareSoftwareOrderItems($Items);
-    $TechDataApi = new TechDataApi($orderId, $preparedOrderItems);
-    $TechDataApi->placeOrder();
+    $preparedOrderItems = TechDataSoftwareApi::prepareSoftwareOrderItems($Items);
+    $TechDataSoftwareApi = new TechDataSoftwareApi($orderId, $preparedOrderItems);
+    $TechDataSoftwareApi->placeOrder();
 
-    $dropshipping_reference_no = $TechDataApi->getOrderReferenceNo();
-    $dropshipping_response_code = $TechDataApi->getResponseCode();
-    $dropshipping_response_message = $TechDataApi->getResponseMessage();
-    $dropshipping_response_items = $TechDataApi->getOrderResponseItems();
-    $TechDataApi->registerNewSoftwareOrder($orderId, $dropshipping_reference_no, $dropshipping_response_code, $dropshipping_response_message, $dropshipping_response_items);
+    $dropshipping_reference_no = $TechDataSoftwareApi->getOrderReferenceNo();
+    $dropshipping_response_code = $TechDataSoftwareApi->getResponseCode();
+    $dropshipping_response_message = $TechDataSoftwareApi->getResponseMessage();
+    $dropshipping_response_items = $TechDataSoftwareApi->getOrderResponseItems();
+    $TechDataSoftwareApi->registerNewSoftwareOrder($orderId, $dropshipping_reference_no, $dropshipping_response_code, $dropshipping_response_message, $dropshipping_response_items);
   }
 
+}
 
-};
+//function syncAllSoftwareFromTechData() {
+////  require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
+//
+////  global $wpdb;
+////  $table_name = TablesRepository::getTableNameProduct();
+////  $wpdb->query("update $table_name set price = 2 where price is not null");
+//  $TechDataSynchronizer = new TechDataSynchronizer(DropShipping::$type_software);
+//  $TechDataSynchronizer->syncAllFromTechData();
+//}

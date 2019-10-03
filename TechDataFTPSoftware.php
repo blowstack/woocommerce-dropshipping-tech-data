@@ -30,8 +30,8 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
 
    public function importFromTechData(): void {
 
-//    $this->downloadContents();
-//    $this->writeContentsToFile();
+    $this->downloadContents();
+    $this->writeContentsToFile();
 
     $csv_file_path = $this->getProductFilePath();
     $table_name_product = TablesRepository::getTableNameProduct();
@@ -40,7 +40,6 @@ class TechDataFTPSoftware extends TechDataFTP implements TechDataFTPInterface {
     $this->insertRawCSVToTemporaryTables($table_name_temporary_software, $csv_file_path,"'\t'");
     $this->insertSoftwareIntoDropshipping($table_name_product, $table_name_temporary_software);
     $this->updateDropshippingSoftware($table_name_product, $table_name_temporary_software);
-
 
      $this->clearTemporaryTables([ $table_name_temporary_software ]);
    }
