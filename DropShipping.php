@@ -32,6 +32,7 @@ class DropShipping {
 
   function __construct() {
     $this->plugin_name = plugin_basename(__FILE__);
+    require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
     require_once( dirname( __FILE__ ) . '/repos/TablesRepository.php' );
     require_once( dirname( __FILE__ ) . '/TechDataConfigManager.php' );
     require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
@@ -233,12 +234,16 @@ function woocommerce_product_custom_fields_display() {
 function register_myclass() {
   class TechData_WC_Product extends WC_Product {
 
-    public function __construct($product = 0) {
+    public function __construct($product) {
       parent::__construct($product);
       $this->data['dropshipping'] = '';
 
+      $WpProductRepository = new WpProductRepository();
 
-      $this->set_dropshipping('software');
+      $product_id =  $this->get_id();
+      $dropshipping = (string) $WpProductRepository->getProductDropshipping($product_id);
+
+      $this->set_dropshipping("$dropshipping");
       $this->save();
     }
 
@@ -253,6 +258,7 @@ function register_myclass() {
     public function set_dropshipping( $dropshipping ) {
       $this->set_prop( 'dropshipping',  $dropshipping );
     }
+
 
   }
 }
@@ -332,8 +338,8 @@ function placeOrderTechData( $order ) {
   $orders_table_name = TablesRepository::getTableNameOrders();
 
   $status = $order->get_status();
-  $restricted_statues = ['on-hold', 'failed', 'cancelled'];
-//    $restricted_statues = ['on-hold', 'pending', 'failed', 'cancelled'];
+//  $restricted_statues = ['on-hold', 'failed', 'cancelled'];
+    $restricted_statues = ['on-hold', 'pending', 'failed', 'cancelled'];
 
   // no payment or error
   if (in_array($status, $restricted_statues)) {
@@ -347,8 +353,8 @@ function placeOrderTechData( $order ) {
 
 
 
-  //  if (!$dropshipping_software_order_check && $status == 'processing' && $preparedSoftwareOrderItems) {
-  if (!$dropshipping_software_order_check && $preparedSoftwareOrderItems) {
+    if (!$dropshipping_software_order_check && $status == 'processing' && $preparedSoftwareOrderItems) {
+//  if (!$dropshipping_software_order_check && $preparedSoftwareOrderItems) {
 
     $TechDataSoftwareApi = new TechDataSoftwareApi($orderId, $preparedSoftwareOrderItems);
     $TechDataSoftwareApi->placeOrder();
