@@ -104,6 +104,7 @@ class DropShipping {
     add_menu_page('DropShipping', 'Dropshipping', 'manage_options', 'DropShipping', [ $this, 'admin_index'],'dashicons-store', 10);
     add_submenu_page( 'DropShipping', 'software', 'Software', 'manage_options', 'DropShipping/software.php', [ $this, 'software_index'] );
     add_submenu_page( 'DropShipping', 'hardware', 'Hardware', 'manage_options', 'DropShipping/hardware.php', [ $this, 'hardware_index'] );
+    add_submenu_page( 'DropShipping', 'test', 'Test', 'manage_options', 'DropShipping/test.php', [ $this, 'test_index'] );
   }
 
   function admin_index() {
@@ -116,6 +117,10 @@ class DropShipping {
 
   function hardware_index() {
     require_once plugin_dir_path(__FILE__) . 'templates/hardware.php';
+  }
+
+  function test_index() {
+    require_once plugin_dir_path(__FILE__) . 'templates/test.php';
   }
 
   function enqueue() {
@@ -225,13 +230,30 @@ function woocommerce_product_custom_fields_display() {
 }
 
 
-// todo czy to jest potrzebne
 function register_myclass() {
-  class TechDataProduct extends WC_Product {
+  class TechData_WC_Product extends WC_Product {
 
     public function __construct($product = 0) {
       parent::__construct($product);
+      $this->data['dropshipping'] = '';
+
+
+      $this->set_dropshipping('software');
+      $this->save();
     }
+
+    public function get_dropshipping($context = 'view') {
+      return $this->get_prop( 'dropshipping', $context );
+    }
+
+    public function is_dropshipping_software() {
+      return apply_filters( 'woocommerce_is_dropshipping_software', 'software' === $this->get_dropshipping(), $this );
+    }
+
+    public function set_dropshipping( $dropshipping ) {
+      $this->set_prop( 'dropshipping',  $dropshipping );
+    }
+
   }
 }
 
@@ -321,13 +343,14 @@ function placeOrderTechData( $order ) {
   $orderId = $order->get_id();
   $Items = $order->get_items();
   $dropshipping_software_order_check =  $wpdb->get_results("select * from $orders_table_name where order_id = '$orderId' and (response_code = 3002 or response_code = 3001)");
+  $preparedSoftwareOrderItems = TechDataSoftwareApi::prepareSoftwareOrderItems($Items);
 
 
-//  if (!$dropshipping_software_order_check && $status == 'processing') {
-  if (!$dropshipping_software_order_check) {
 
-    $preparedOrderItems = TechDataSoftwareApi::prepareSoftwareOrderItems($Items);
-    $TechDataSoftwareApi = new TechDataSoftwareApi($orderId, $preparedOrderItems);
+  //  if (!$dropshipping_software_order_check && $status == 'processing' && $preparedSoftwareOrderItems) {
+  if (!$dropshipping_software_order_check && $preparedSoftwareOrderItems) {
+
+    $TechDataSoftwareApi = new TechDataSoftwareApi($orderId, $preparedSoftwareOrderItems);
     $TechDataSoftwareApi->placeOrder();
 
     $dropshipping_reference_no = $TechDataSoftwareApi->getOrderReferenceNo();

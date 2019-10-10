@@ -574,4 +574,12 @@ class WpProductRepository {
       $wpdb->query('commit');
     }
 
+    public function getProductDropshipping($product_id) {
+      $wpdb = $this->wpdb;
+
+      $result = $wpdb->get_results("select meta.meta_value from wp_postmeta meta inner join wp_posts post on post.id = meta.post_id where post.post_type = 'product' and meta.post_id = '$product_id' and meta.meta_key = '_dropshipping';");
+
+      return $result[0]->meta_value;
+    }
+
 }
