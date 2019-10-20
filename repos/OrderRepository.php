@@ -37,4 +37,29 @@ class OrderRepository {
     }
   }
 
+  public function registerNewHardwareOrder($wp_order_id, $msg_id, $items, $env, $full) {
+    $wpdb = $this->wpdb;
+    $orders_table_name = TablesRepository::getTableNameOrdersHardware();
+
+    $wpdb->insert("$orders_table_name",
+      [
+        'order_id' => $wp_order_id,
+        'msg_id' => $msg_id,
+        'env' => $env,
+        'full' => $full
+      ]
+    );
+  }
+
+  public function getNewMsgId($env) {
+    $wpdb = $this->wpdb;
+    $orders_table_name = TablesRepository::getTableNameOrdersHardware();
+
+    $result = $wpdb->get_results("select max(msg_id) as msg_id from $orders_table_name where env = '$env' limit 1");
+
+    $last_msg_id = $result[0]->msg_id ? $result[0]->msg_id : 0;
+
+    return $last_msg_id + 1;
+  }
+
 }

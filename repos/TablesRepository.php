@@ -12,6 +12,7 @@ class TablesRepository {
   static $table_name_temp_soft = "temporary_soft";
   static $table_name_ftp_config = "ftp_config";
   static $table_name_orders = "orders";
+  static $table_name_orders_hardware = "orders_hardware";
   static $table_name_order_items = "order_items";
 
   static $table_name_wp_posts = "posts";
@@ -99,6 +100,16 @@ class TablesRepository {
     $prefixes = DropShipping::getTablePrefixes();
     return $prefixes. self::$table_name_orders;
   }
+
+  /**
+   * @return string
+   */
+  public static function getTableNameOrdersHardware(): string {
+
+    $prefixes = DropShipping::getTablePrefixes();
+    return $prefixes. self::$table_name_orders_hardware;
+  }
+
 
   /**
    * @return string
@@ -315,6 +326,30 @@ class TablesRepository {
     return $sql;
   }
 
+  /**
+   * @param $table_name
+   * @param $charset_collate
+   * @return string
+   */
+  private function getOrdersHardwareTableSQL(): string {
+
+    $table_name = $this->getTableNameOrdersHardware();
+    $charset_collate = $this->charset_collate;
+
+    $sql = "CREATE TABLE $table_name (        
+            id int auto_increment,
+            order_id int not null,
+            msg_id int null,
+            created_at datetime default CURRENT_TIMESTAMP not null,
+            env varchar(4) default 'dev' not null,
+            full text null,
+            PRIMARY KEY (id)
+            )
+            $charset_collate";
+
+    return $sql;
+  }
+
 
 
   private function getAlterWpPostTableSQL() {
@@ -371,13 +406,17 @@ class TablesRepository {
     dbDelta( $sql );
   }
 
+  public function createOrdersHardwareTable(): void {
+
+    $sql = $this->getOrdersHardwareTableSQL();
+    dbDelta( $sql );
+  }
+
   public function createOrderItemsTable(): void {
 
     $sql = $this->getOrderItemsTableSQL();
     dbDelta( $sql );
   }
-
-
 
   public function alterWpPostsTable() {
     global $wpdb;

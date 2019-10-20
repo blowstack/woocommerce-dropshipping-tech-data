@@ -8,21 +8,23 @@ class TechDataSynchronizer {
 
   private $FTP;
   private $ProductGenerator;
+  private $dropshipping;
 
   /**
    * TechDataSynchronizer constructor.
    * @param $dropshipping_type
    */
-  public function __construct($dropshipping_type) {
+  public function __construct($dropshipping) {
 
     require_once( dirname( __FILE__ ) . '/TechDataFTPHardware.php' );
     require_once( dirname( __FILE__ ) . '/TechDataFTPSoftware.php' );
     require_once( dirname( __FILE__ ) . '/TechDataProductGenerator.php' );
 
     $ConfigManager = new TechDataConfigManager();
-    $Config = $ConfigManager->getConfg($dropshipping_type);
+    $Config = $ConfigManager->getConfg($dropshipping);
+    $this->dropshipping = $dropshipping;
 
-    switch ($dropshipping_type) {
+    switch ($dropshipping) {
       case DropShipping::$type_software:
 
         $this->FTP = new TechDataFTPSoftware(
@@ -45,7 +47,7 @@ class TechDataSynchronizer {
         break;
     }
 
-    $this->ProductGenerator = new TechDataProductGenerator($dropshipping_type);
+    $this->ProductGenerator = new TechDataProductGenerator($dropshipping);
   }
 
 
@@ -74,6 +76,9 @@ class TechDataSynchronizer {
     $TechDataProductGenerator->generatePostMetaDropShipping();
     $TechDataProductGenerator->generatePostCategories();
 
+    $dropshipping = $this->dropshipping;
+    $virtual = $dropshipping == DropShipping::$type_software ? 1 : 0;
+
 
     // price, sku, regular_price, stock generated separately
     $TechDataProductGenerator->generateWpPostMetasBasic(
@@ -100,7 +105,7 @@ class TechDataSynchronizer {
         '_crosssell_ids' => 'a:0:{}',
         '_purchase_note' => '',
         '_default_attributes' => 'a:0:{}',
-        '_virtual' => 1,
+        '_virtual' => $virtual,
         '_downloadable' => 'no',
         '_product_image_gallery' => '',
         '_download_limit' => '-1',

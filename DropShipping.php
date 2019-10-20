@@ -33,6 +33,7 @@ class DropShipping {
   function __construct() {
     $this->plugin_name = plugin_basename(__FILE__);
     require_once( dirname( __FILE__ ) . '/repos/WpProductRepository.php' );
+    require_once( dirname( __FILE__ ) . '/repos/OrderRepository.php' );
     require_once( dirname( __FILE__ ) . '/repos/TablesRepository.php' );
     require_once( dirname( __FILE__ ) . '/TechDataConfigManager.php' );
     require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
@@ -73,6 +74,7 @@ class DropShipping {
     $TablesRepository->createFtpConfigTable();
     $TablesRepository->createOrdersTable();
     $TablesRepository->createOrderItemsTable();
+    $TablesRepository->createOrdersHardwareTable();
     $TablesRepository->alterWpPostsTable();
 
   }
@@ -251,12 +253,16 @@ function register_myclass() {
       return $this->get_prop( 'dropshipping', $context );
     }
 
+    public function set_dropshipping( $dropshipping ) {
+      $this->set_prop( 'dropshipping',  $dropshipping );
+    }
+
     public function is_dropshipping_software() {
       return apply_filters( 'woocommerce_is_dropshipping_software', 'software' === $this->get_dropshipping(), $this );
     }
 
-    public function set_dropshipping( $dropshipping ) {
-      $this->set_prop( 'dropshipping',  $dropshipping );
+    public function is_dropshipping_hardware() {
+      return apply_filters( 'woocommerce_is_dropshipping_software', 'hardware' === $this->get_dropshipping(), $this );
     }
 
 
@@ -333,11 +339,15 @@ function cf_search_distinct( $where ) {
 function placeOrderTechData( $order ) {
 
   include_once(ABSPATH . 'TechDataSoftwareApi.php');
+  include_once(ABSPATH . 'TechDataHardwareApi.php');
   global $wpdb;
 
   $orders_table_name = TablesRepository::getTableNameOrders();
+  $orders_hardware_table_name = TablesRepository::getTableNameOrdersHardware();
+  $env = 'dev';
 
   $status = $order->get_status();
+//  $restricted_statues = [];
 //  $restricted_statues = ['on-hold', 'failed', 'cancelled'];
     $restricted_statues = ['on-hold', 'pending', 'failed', 'cancelled'];
 
@@ -348,13 +358,16 @@ function placeOrderTechData( $order ) {
 
   $orderId = $order->get_id();
   $Items = $order->get_items();
+
   $dropshipping_software_order_check =  $wpdb->get_results("select * from $orders_table_name where order_id = '$orderId' and (response_code = 3002 or response_code = 3001)");
   $preparedSoftwareOrderItems = TechDataSoftwareApi::prepareSoftwareOrderItems($Items);
 
+  $dropshipping_hardware_order_check =  $wpdb->get_results("select * from $orders_hardware_table_name where order_id = '$orderId' and env = '$env'");
+  $preparedHardwareOrderItems = TechDataHardwareApi::prepareHardwareOrderItems($Items);
 
 
-    if (!$dropshipping_software_order_check && $status == 'processing' && $preparedSoftwareOrderItems) {
-//  if (!$dropshipping_software_order_check && $preparedSoftwareOrderItems) {
+//  if (!$dropshipping_software_order_check && $status == 'processing' && $preparedSoftwareOrderItems) {
+  if (!$dropshipping_software_order_check && $preparedSoftwareOrderItems) {
 
     $TechDataSoftwareApi = new TechDataSoftwareApi($orderId, $preparedSoftwareOrderItems);
     $TechDataSoftwareApi->placeOrder();
@@ -364,6 +377,21 @@ function placeOrderTechData( $order ) {
     $dropshipping_response_message = $TechDataSoftwareApi->getResponseMessage();
     $dropshipping_response_items = $TechDataSoftwareApi->getOrderResponseItems();
     $TechDataSoftwareApi->registerNewSoftwareOrder($orderId, $dropshipping_reference_no, $dropshipping_response_code, $dropshipping_response_message, $dropshipping_response_items);
+  }
+
+  if (!$dropshipping_hardware_order_check && $preparedHardwareOrderItems) {
+//  if ($preparedHardwareOrderItems) {
+
+    $OrdersRepository = new OrderRepository();
+
+    $msgId = $OrdersRepository->getNewMsgId($env);
+
+    $TechDataHardwareApi = new TechDataHardwareApi($order, $preparedHardwareOrderItems, $msgId);
+    $TechDataHardwareApi->placeOrder();
+    $full = $TechDataHardwareApi->getOrderResponse();
+
+    $OrdersRepository->registerNewHardwareOrder($orderId, $msgId, $preparedHardwareOrderItems, $env, $full);
+
   }
 
 }
