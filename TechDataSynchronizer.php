@@ -69,6 +69,7 @@ class TechDataSynchronizer {
     $TechDataProductGenerator->generatePostMetaPrice();
     $TechDataProductGenerator->generatePostMetaRegularPrice();
     $TechDataProductGenerator->generatePostMetaStock();
+    $TechDataProductGenerator->generatePostMetaEan();
     $TechDataProductGenerator->generateWpPostMetaCost();
     $TechDataProductGenerator->generateWpPostMetaImage();
     $TechDataProductGenerator->generatePostMetaProducerCode();

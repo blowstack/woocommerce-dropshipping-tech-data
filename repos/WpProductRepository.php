@@ -291,6 +291,28 @@ class WpProductRepository {
     $wpdb->query('commit');
   }
 
+  public function generateWpPostMetaEan() {
+    $wpdb = $this->wpdb;
+    $table_name_postmeta = $this->table_name_postmeta;
+
+    $wpdb->query('start transaction');
+    $wpdb->query("insert into $table_name_postmeta
+                        (
+                          post_id, meta_key, meta_value
+                        )
+                        select
+                          post.id, '_ean', pt.ean
+                        from wp_posts post
+                        inner join wp_dropshipping_techdata_soft_temp pt on pt.distributor_id = post.dropshipping_id
+                        where NOT EXISTS(
+                              SELECT 1
+                              FROM wp_postmeta
+                              WHERE `meta_key` = '_ean' and 
+                              `post_id` = post.id   )
+                        and pt.ean is not null and length(pt.ean) > 1");
+    $wpdb->query('commit');
+  }
+
   public function generateWpPostMetaProducerCode() {
     $wpdb = $this->wpdb;
     $table_name_postmeta = $this->table_name_postmeta;

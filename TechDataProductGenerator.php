@@ -55,6 +55,11 @@ class TechDataProductGenerator {
     $WpProductRepository->generateWpPostMetaStock();
   }
 
+  public function generatePostMetaEan() {
+    $WpProductRepository = $this->WpProductRepository;
+    $WpProductRepository->generateWpPostMetaEan();
+  }
+
   public function generatePostMetaProducerCode() {
     $WpProductRepository = $this->WpProductRepository;
     $WpProductRepository->generateWpPostMetaProducerCode();
