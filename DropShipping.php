@@ -396,12 +396,37 @@ function placeOrderTechData( $order ) {
 
 }
 
-//function syncAllSoftwareFromTechData() {
-////  require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
-//
-////  global $wpdb;
-////  $table_name = TablesRepository::getTableNameProduct();
-////  $wpdb->query("update $table_name set price = 2 where price is not null");
-//  $TechDataSynchronizer = new TechDataSynchronizer(DropShipping::$type_software);
-//  $TechDataSynchronizer->syncAllFromTechData();
-//}
+// CRON
+function syncAllSoftwareFromTechData() {
+    require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
+
+  $TechDataSynchronizer = new TechDataSynchronizer(DropShipping::$type_software);
+  $TechDataSynchronizer->syncAllFromTechData();
+}
+
+// CRON
+function syncAllHardwareFromTechData() {
+  require_once( dirname( __FILE__ ) . '/TechDataSynchronizer.php' );
+
+  $TechDataSynchronizer = new TechDataSynchronizer(DropShipping::$type_hardware);
+  $TechDataSynchronizer->syncAllFromTechData();
+}
+
+
+add_action( 'moj_akcja', 'syncAllSoftwareFromTechData' );
+
+if ( !wp_next_scheduled('moja_akcja') ) {
+  wp_schedule_event( time(), 'daily', 'moja_akcja' );
+  // Podstawowe przedziały czasowe: hourly, daily and twicedaily
+}
+
+
+add_action( 'moj_akcja2', 'syncAllHardwareFromTechData' );
+
+if ( !wp_next_scheduled('moja_akcja2') ) {
+  wp_schedule_event( time(), 'daily', 'moja_akcja2' );
+  // Podstawowe przedziały czasowe: hourly, daily and twicedaily
+}
+
+
+

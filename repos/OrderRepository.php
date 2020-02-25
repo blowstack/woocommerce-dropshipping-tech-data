@@ -62,4 +62,15 @@ class OrderRepository {
     return $last_msg_id + 1;
   }
 
+  public function getTechDataSku($product_id) {
+
+    $wpdb = $this->wpdb;
+    $posts_table_name = TablesRepository::getTableNameWpPosts();
+
+    $result = $wpdb->get_results("select dropshipping_id as sku from $posts_table_name limit 1");
+
+    return $result[0]->sku;
+
+  }
+
 }
